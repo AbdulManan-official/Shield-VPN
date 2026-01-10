@@ -215,48 +215,9 @@ class _HomeScreenState extends State<HomeScreen>
     _connectivitySubscription?.cancel();
     _saveAppState();
 
-    // final ads = Provider.of<AdsProvider>(context, listen: false);
-    // adsController.disposeAll();
     super.dispose();
   }
 
-  // Future<void> _getAllApps() async {
-  //   final appsProvider = Provider.of<AppsProvider>(context, listen: false);
-  //
-  //   if (appsProvider.hasLoadedApps) {
-  //     // Already loaded, no need to fetch again
-  //     return;
-  //   }
-  //
-  //   appsProvider.updateLoader(true);
-  //
-  //   try {
-  //     await appsProvider.setDisallowList();
-  //
-  //     final results = await Future.wait([
-  //       GetApps.GetAllAppInfo(),
-  //       GetApps.GetSocialSystemApps(),
-  //     ]);
-  //
-  //     final userApps = results[0];
-  //     final socialSystemApps = results[1];
-  //
-  //     final allApps = [
-  //       ...userApps.map((app) => ApplicationModel(isSelected: true, app: app)),
-  //       ...socialSystemApps
-  //           .map((app) => ApplicationModel(isSelected: true, app: app)),
-  //     ];
-  //
-  //     allApps.sort((a, b) =>
-  //         (a.app.name).toLowerCase().compareTo((b.app.name).toLowerCase()));
-  //
-  //     appsProvider.setAllApps(allApps);
-  //   } catch (e, stack) {
-  //     debugPrint("Error loading apps in home: $e\n$stack");
-  //   } finally {
-  //     appsProvider.updateLoader(false);
-  //   }
-  // }
 
   Future<void> _checkSubscriptionStatus() async {
     debugPrint("_checkSubscriptionStatus CALLED--");
@@ -1252,10 +1213,7 @@ class _HomeScreenState extends State<HomeScreen>
                                 builder: (context, serversProvider, child) {
                                   return GestureDetector(
                                     onTap: () {
-                                      // final adsProvider =
-                                      //     Provider.of<AdsProvider>(context,
-                                      //         listen: false);
-                                      // adsProvider.disposeBanner();
+
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
@@ -1462,18 +1420,8 @@ class _HomeScreenState extends State<HomeScreen>
                                     // Default connect button
                                     return ConnectButton(
                                       onPressed: () async {
-                                        // final ads = Provider.of<AdsProvider>(
-                                        //     context,
-                                        //     listen: false);
-                                        final AppsController apps = Get.find();
 
-                                        // Your existing connection logic here
-                                        // bool internetAvailable =
-                                        //     await hasInternetConnection();
-                                        // if (!internetAvailable) {
-                                        //   _showNetworkErrorDialog();
-                                        //   return;
-                                        // }
+                                        final AppsController apps = Get.find();
 
                                         final selectedServer =
                                             serversProvider.selectedServer;
@@ -1535,20 +1483,6 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ],
               ),
-              // if (_isCheckingConnection)
-              //   Container(
-              //     color: Colors.black54, // semi-transparent overlay
-              //     child: const Center(
-              //       child: SizedBox(
-              //         width: 50,
-              //         height: 50,
-              //         child: CircularProgressIndicator(
-              //           strokeWidth: 4,
-              //           valueColor: AlwaysStoppedAnimation(Colors.white),
-              //         ),
-              //       ),
-              //     ),
-              //   ),
             ],
           ),
         );
@@ -1756,19 +1690,6 @@ class _HomeScreenState extends State<HomeScreen>
           );
         }),
 
-        // Consumer<AdsProvider>(
-        //   builder: (_, ads, __) {
-        //     final banner = ads.getBannerAd;
-        //     return banner != null
-        //         ? Container(
-        //             alignment: Alignment.center,
-        //             width: banner.size.width.toDouble(),
-        //             height: banner.size.height.toDouble(),
-        //             child: AdWidget(ad: banner),
-        //           )
-        //         : SizedBox.shrink();
-        //   },
-        // ),
       ],
     );
   }

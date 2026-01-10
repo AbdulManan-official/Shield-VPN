@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../utils/logo_painter.dart';
+import '../utils/app_theme.dart';
 import 'Widgets/navbar.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -14,11 +15,6 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
   late AnimationController _controller;
-
-  // late AnimationController _fadeController;
-  // late Animation<double> _fadeIn;
-  // late AnimationController _barController;
-  // late Animation<double> _barAnimation;
 
   @override
   void initState() {
@@ -42,36 +38,20 @@ class _SplashScreenState extends State<SplashScreen>
         });
       }
     });
-
-    // _fadeController = AnimationController(
-    //   vsync: this,
-    //   duration: const Duration(seconds: 1),
-    // );
-    // _fadeIn = CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut);
-    // _fadeController.repeat();
-
-    // _barController = AnimationController(
-    //   vsync: this,
-    //   duration: const Duration(milliseconds: 2000),
-    // );
-    // _barAnimation =
-    //     CurvedAnimation(parent: _barController, curve: Curves.easeInOut);
-    // _barController.repeat();
   }
 
   @override
   void dispose() {
-    // _fadeController.dispose();
-    // _barController.dispose();
     _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // final theme = Theme.of(context);
+    final isDark = AppTheme.isDarkMode(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+
     // Proportional sizes for any device
     double fontSize = screenWidth * 0.10;
     double iconSize = screenWidth * 0.18;
@@ -89,6 +69,7 @@ class _SplashScreenState extends State<SplashScreen>
     double progressBarPaddingH = screenWidth * 0.08;
     double progressBarBottom =
         MediaQuery.of(context).padding.bottom + screenHeight * 0.04;
+
     // Clamp for extreme small/large screens
     fontSize = fontSize.clamp(18.0, 56.0);
     iconSize = iconSize.clamp(28.0, 100.0);
@@ -107,22 +88,14 @@ class _SplashScreenState extends State<SplashScreen>
     progressBarBottom = progressBarBottom.clamp(
         MediaQuery.of(context).padding.bottom + 8.0,
         MediaQuery.of(context).padding.bottom + 64.0);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A2E),
+      backgroundColor: isDark ? AppTheme.bgDark : AppTheme.bgLight,
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF1A1A2E),
-              Color(0xFF16213E),
-              Color(0xFF20E5C7),
-            ],
-            stops: [0.0, 0.7, 1.0],
-          ),
+        decoration: BoxDecoration(
+          gradient: isDark ? AppTheme.bgGradientDark : AppTheme.bgGradientLight,
         ),
         child: Center(
           child: AnimatedBuilder(
@@ -132,160 +105,15 @@ class _SplashScreenState extends State<SplashScreen>
                 width: Get.width * 0.8,
                 height: Get.width * 0.32,
                 child: CustomPaint(
-                  painter: VpnMaxLogoPainter(progress: _controller.value),
+                  painter: VpnLogoPainter(
+                    progress: _controller.value,
+                    isDarkMode: isDark,
+                  ),
                 ),
               );
             },
           ),
         ),
-        // child: Stack(
-        //   children: [
-        //     FadeTransition(
-        //       opacity: _fadeIn,
-        //       child: Center(
-        //         child: Column(
-        //           mainAxisAlignment: MainAxisAlignment.center,
-        //           children: [
-        //             Container(
-        //               padding: EdgeInsets.all(boxPadding),
-        //               decoration: BoxDecoration(
-        //                 shape: BoxShape.circle,
-        //                 color: Colors.white.withValues(alpha: 0.07),
-        //                 boxShadow: [
-        //                   BoxShadow(
-        //                     color: theme.colorScheme.secondary
-        //                         .withValues(alpha: 0.18),
-        //                     blurRadius: boxShadowBlur,
-        //                     spreadRadius: 2,
-        //                     offset: Offset(0, boxShadowOffset),
-        //                   ),
-        //                 ],
-        //               ),
-        //               child: Icon(
-        //                 Icons.security_rounded,
-        //                 color: theme.colorScheme.secondary,
-        //                 size: iconSize,
-        //               ),
-        //             ),
-        //             SizedBox(height: verticalSpacing1 - 10),
-        //             Stack(
-        //               alignment: Alignment.center,
-        //               children: [
-        //                 RichText(
-        //                   text: TextSpan(
-        //                     children: [
-        //                       TextSpan(
-        //                         text: 'VPN',
-        //                         style: TextStyle(
-        //                           color: Colors.white,
-        //                           fontSize: fontSize,
-        //                           fontWeight: FontWeight.bold,
-        //                           letterSpacing: 1.2,
-        //                           shadows: [
-        //                             Shadow(
-        //                               color:
-        //                                   Colors.black.withValues(alpha: 0.22),
-        //                               blurRadius: titleUnderlineBlur,
-        //                               offset: Offset(0, 2),
-        //                             ),
-        //                           ],
-        //                         ),
-        //                       ),
-        //                       TextSpan(
-        //                         text: ' Max',
-        //                         style: TextStyle(
-        //                           color: theme.colorScheme.secondary,
-        //                           fontSize: fontSize,
-        //                           fontWeight: FontWeight.bold,
-        //                           letterSpacing: 1.2,
-        //                           shadows: [
-        //                             Shadow(
-        //                               color: theme.colorScheme.secondary
-        //                                   .withValues(alpha: 0.22),
-        //                               blurRadius: titleUnderlineBlur,
-        //                               offset: Offset(0, 2),
-        //                             ),
-        //                           ],
-        //                         ),
-        //                       ),
-        //                     ],
-        //                   ),
-        //                 ),
-        //                 Positioned(
-        //                   bottom: -titleUnderlineHeight,
-        //                   child: Container(
-        //                     width: titleUnderlineWidth,
-        //                     height: titleUnderlineHeight,
-        //                     decoration: BoxDecoration(
-        //                       borderRadius: BorderRadius.circular(8),
-        //                       gradient: LinearGradient(
-        //                         colors: [
-        //                           theme.colorScheme.secondary
-        //                               .withValues(alpha: 0.0),
-        //                           theme.colorScheme.secondary
-        //                               .withValues(alpha: 0.7),
-        //                           theme.colorScheme.secondary
-        //                               .withValues(alpha: 0.0),
-        //                         ],
-        //                         stops: const [0.0, 0.5, 1.0],
-        //                       ),
-        //                       boxShadow: [
-        //                         BoxShadow(
-        //                           color: theme.colorScheme.secondary
-        //                               .withValues(alpha: 0.18),
-        //                           blurRadius: titleUnderlineBlur,
-        //                           spreadRadius: 1,
-        //                         ),
-        //                       ],
-        //                     ),
-        //                   ),
-        //                 ),
-        //               ],
-        //             ),
-        //             SizedBox(height: verticalSpacing2),
-        //             Padding(
-        //               padding: EdgeInsets.symmetric(horizontal: textPaddingH),
-        //               child: Text(
-        //                 'Ultra Responsive VPN for Secure & Fast Browsing',
-        //                 textAlign: TextAlign.center,
-        //                 style: TextStyle(
-        //                   color: Colors.white70,
-        //                   fontSize: smallTextSize,
-        //                   fontWeight: FontWeight.w500,
-        //                   letterSpacing: 1.05,
-        //                 ),
-        //               ),
-        //             ),
-        //           ],
-        //         ),
-        //       ),
-        //     ),
-        //     Loading bar at the bottom
-        //     Positioned(
-        //       left: 0,
-        //       right: 0,
-        //       bottom: progressBarBottom,
-        //       child: Padding(
-        //         padding: EdgeInsets.symmetric(horizontal: progressBarPaddingH),
-        //         child: AnimatedBuilder(
-        //           animation: _barAnimation,
-        //           builder: (context, child) {
-        //             return ClipRRect(
-        //               borderRadius: BorderRadius.circular(8),
-        //               child: LinearProgressIndicator(
-        //                 minHeight: progressBarHeight,
-        //                 value: _barAnimation.value,
-        //                 backgroundColor: Colors.white.withValues(alpha: 0.08),
-        //                 valueColor: AlwaysStoppedAnimation<Color>(
-        //                     theme.colorScheme.secondary),
-        //               ),
-        //             );
-        //           },
-        //         ),
-        //       ),
-        //     ),
-        //   ],
-        // ),
       ),
     );
   }
