@@ -1,63 +1,99 @@
 import 'package:flutter/foundation.dart';
+import 'package:get/get.dart';
+import 'package:installed_apps/app_info.dart';
 import '../Model/application_model.dart';
 
+import '../utils/get_apps.dart';
 import '../utils/prefs.dart';
 
-class AppsProvider extends ChangeNotifier {
-  List<ApplicationModel> _apps = [];
-  bool _loading = true;
-  List<String> _disallowList = [];
-  bool _isVpnConnected = false;
+class AppsController extends GetxController {
+  // STATE
+  final RxList<ApplicationModel> installedApps = <ApplicationModel>[].obs;
+  final RxList<ApplicationModel> systemApps = <ApplicationModel>[].obs;
 
-  bool get hasLoadedApps => _apps.isNotEmpty; // or any loading flag you use
+  final RxBool isLoading = true.obs;
+  final RxList<String> disallowList = <String>[].obs;
+  final RxBool isVpnConnected = false.obs;
 
-  bool get isVpnConnected => _isVpnConnected;
-
-  void updateVpnConnectionState(bool isConnected) {
-    _isVpnConnected = isConnected;
-    notifyListeners();
+  // LIFECYCLE
+  @override
+  void onInit() {
+    super.onInit();
+    loadApps();
   }
-  
-  List<ApplicationModel> get getAllApps => _apps;
-  bool get isLoading => _loading;
-  List<String> get getDisallowedList => _disallowList;
+
+  // LOAD APPS
+  Future<void> loadApps() async {
+    isLoading.value = true;
+
+    await setDisallowList();
+
+    final user = await GetApps.getInstalledApps();
+    final system = await GetApps.getSystemApps();
+
+    installedApps.assignAll(
+      _mapToApplicationModel(user),
+    );
+
+    systemApps.assignAll(
+      _mapToApplicationModel(system),
+    );
+
+    isLoading.value = false;
+  }
+
+  // MAP TO APPLICATION MODEL
+  List<ApplicationModel> _mapToApplicationModel(List<AppInfo> apps) {
+    return apps.map((app) {
+      final isBlocked = disallowList.contains(app.packageName);
+
+      return ApplicationModel(
+        app: app,
+        isSelected: !isBlocked,
+      );
+    }).toList();
+  }
+
+  // DISALLOW LIST
   Future<void> setDisallowList() async {
-    final disallowList =
+    final list =
     await MySharedPreference.GetStringList("disallowedList");
-
-    _disallowList = disallowList;
-    notifyListeners();
+    disallowList.assignAll(list);
   }
 
-  void setAllApps(List<ApplicationModel> apps) {
-    for (final item in _disallowList) {
-      for (final app in apps) {
-        if (item == app.app.packageName) {
-          apps[apps.indexOf(app)].isSelected = false;
-        }
-      }
-    }
-    _apps = apps;
-    notifyListeners();
-  }
-
+  // UPDATE APP
   void updateAppsList(String packageName, bool allow) async {
-   
-    if (!allow && !_disallowList.contains(packageName)) {
-      _disallowList.add(packageName);
-      MySharedPreference.SaveStringList("disallowedList", _disallowList);
-    } else {
-      if (_disallowList.contains(packageName)) {
-        _disallowList.remove(packageName);
-        MySharedPreference.SaveStringList("disallowedList", _disallowList);
-      }
+    if (!allow && !disallowList.contains(packageName)) {
+      disallowList.add(packageName);
+    } else if (allow && disallowList.contains(packageName)) {
+      disallowList.remove(packageName);
     }
-    notifyListeners();
+
+    await MySharedPreference.SaveStringList(
+      "disallowedList",
+      disallowList,
+    );
+
+    _syncSelection(installedApps, packageName, allow);
+    _syncSelection(systemApps, packageName, allow);
+    debugPrint(disallowList.toString());
   }
 
-  void updateLoader(bool value) {
-    _loading = value;
-    notifyListeners();
+  void _syncSelection(
+      RxList<ApplicationModel> list,
+      String packageName,
+      bool allow,
+      ) {
+    final index =
+    list.indexWhere((e) => e.app.packageName == packageName);
+    if (index != -1) {
+      list[index].isSelected = allow;
+      list.refresh();
+    }
+  }
 
+  // VPN STATE
+  void updateVpnConnectionState(bool value) {
+    isVpnConnected.value = value;
   }
 }

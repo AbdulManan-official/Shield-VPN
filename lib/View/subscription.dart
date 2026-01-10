@@ -1,7 +1,7 @@
 // import 'package:flutter/material.dart';
 // import 'package:in_app_purchase/in_app_purchase.dart';
 // import 'package:onepref/onepref.dart';
-// import 'package:vpnprowithjava/providers/ads_provider.dart';
+// import 'package:vpnprowithjava/providers/ads_controller.dart';
 
 // class ConsumableItems extends StatefulWidget {
 //   const ConsumableItems({Key? key}) : super(key: key);

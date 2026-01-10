@@ -1,21 +1,16 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:store_redirect/store_redirect.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:uuid/uuid.dart';
 import 'package:vpnprowithjava/View/premium_access_screen.dart';
 import 'package:vpnprowithjava/View/subscription_manager.dart';
-import 'package:vpnprowithjava/utils/colors.dart';
 
-import '../providers/ads_provider.dart';
-import '../utils/preferences.dart';
+import '../providers/ads_controller.dart';
+import '../utils/custom_toast.dart';
 
 // Extension for responsive design
 extension ResponsiveExtension on BuildContext {
@@ -74,7 +69,7 @@ class MoreScreen extends StatefulWidget {
 }
 
 class _MoreScreenState extends State<MoreScreen> {
-  String? _uuid;
+  // String? _uuid;
 
   // late SubscriptionManager subscriptionManager;
   final SubscriptionController subscriptionManager = Get.find();
@@ -97,28 +92,25 @@ class _MoreScreenState extends State<MoreScreen> {
     if (await canLaunchUrl(params)) {
       await launchUrl(params);
     } else {
-      Fluttertoast.showToast(
-        msg:
-            'Could not launch email client. Please send your feedback to vpnapp@technosofts.net',
-        backgroundColor: Colors.grey[800],
-        textColor: Colors.white,
+      showLogoToast(
+        'Could not launch email client. Please send your feedback to vpnapp@technosofts.net',
       );
     }
   }
 
   Future<void> _loadUuid() async {
-    String? storedUuid = Prefs.getString('uuid');
-    if (storedUuid == null) {
-      final uuid = const Uuid().v4();
-      await Prefs.setString('uuid', uuid);
-      setState(() {
-        _uuid = uuid;
-      });
-    } else {
-      setState(() {
-        _uuid = storedUuid;
-      });
-    }
+    // String? storedUuid = Prefs.getString('uuid');
+    // if (storedUuid == null) {
+    //   final uuid = const Uuid().v4();
+    //   await Prefs.setString('uuid', uuid);
+    //   setState(() {
+    //     _uuid = uuid;
+    //   });
+    // } else {
+    //   setState(() {
+    //     _uuid = storedUuid;
+    //   });
+    // }
   }
 
   void _showSubscriptionDialog(BuildContext context) {
@@ -269,15 +261,16 @@ class _MoreScreenState extends State<MoreScreen> {
   //     );
   //   }
   // }
-  late AdsProvider _adsProvider;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _adsProvider = Provider.of<AdsProvider>(context, listen: false);
-    // subscriptionManager =
-    //     Provider.of<SubscriptionManager>(context, listen: false);
-  }
+  // late AdsProvider _adsProvider;
+  //
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   _adsProvider = Provider.of<AdsProvider>(context, listen: false);
+  //   // subscriptionManager =
+  //   //     Provider.of<SubscriptionManager>(context, listen: false);
+  // }
+  final AdsController adsController = Get.find();
 
   @override
   void initState() {
@@ -290,8 +283,8 @@ class _MoreScreenState extends State<MoreScreen> {
 
   @override
   void dispose() {
-    _adsProvider.disposeBanner2();
-    _adsProvider.disposeAll();
+    adsController.disposeBanner2();
+    // _adsProvider.disposeAll();
     super.dispose();
   }
 
@@ -430,117 +423,129 @@ class _MoreScreenState extends State<MoreScreen> {
                       SizedBox(height: context.responsiveSpacing(16)),
 
                       // UUID Card
-                      Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: cardBg,
-                          borderRadius: BorderRadius.circular(
-                            context.responsiveBorderRadius(16),
-                          ),
-                          border: Border.all(
-                            color: lightPurple.withValues(alpha: 0.2),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: primaryPurple.withValues(alpha: 0.1),
-                              blurRadius: 12,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                        padding: const EdgeInsets.all(15),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Device UUID",
-                                    style: context.responsiveTextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  SizedBox(
-                                      height: context.responsiveSpacing(4)),
-                                  Text(
-                                    _uuid ?? 'Loading UUID...',
-                                    style: context.responsiveTextStyle(
-                                      fontSize: 12.5,
-                                      color: lightPurple,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(width: context.responsiveSpacing(12)),
-                            GestureDetector(
-                              onTap: () async {
-                                if (_uuid != null) {
-                                  await Clipboard.setData(
-                                      ClipboardData(text: _uuid!));
-                                  Fluttertoast.showToast(
-                                    msg: "UUID copied!",
-                                    backgroundColor: Colors.grey[800],
-                                    textColor: Colors.white,
-                                  );
-                                }
-                              },
-                              child: Container(
-                                padding: context.responsivePadding(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: UIColors.primaryPurple,
-                                  borderRadius: BorderRadius.circular(
-                                    context.responsiveBorderRadius(10),
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: UIColors.primaryPurple
-                                          .withValues(alpha: 0.3),
-                                      blurRadius: 8,
-                                      spreadRadius: 1,
-                                    ),
-                                  ],
-                                ),
-                                child: Text(
-                                  "COPY",
-                                  style: context.responsiveTextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    letterSpacing: 1.1,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      // Container(
+                      //   width: double.infinity,
+                      //   decoration: BoxDecoration(
+                      //     color: cardBg,
+                      //     borderRadius: BorderRadius.circular(
+                      //       context.responsiveBorderRadius(16),
+                      //     ),
+                      //     border: Border.all(
+                      //       color: lightPurple.withValues(alpha: 0.2),
+                      //     ),
+                      //     boxShadow: [
+                      //       BoxShadow(
+                      //         color: primaryPurple.withValues(alpha: 0.1),
+                      //         blurRadius: 12,
+                      //         spreadRadius: 2,
+                      //       ),
+                      //     ],
+                      //   ),
+                      //   padding: const EdgeInsets.all(15),
+                      //   child: Row(
+                      //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      //     children: [
+                      //       Expanded(
+                      //         child: Column(
+                      //           crossAxisAlignment: CrossAxisAlignment.start,
+                      //           children: [
+                      //             Text(
+                      //               "Device UUID",
+                      //               style: context.responsiveTextStyle(
+                      //                 fontSize: 16,
+                      //                 fontWeight: FontWeight.bold,
+                      //                 color: Colors.white,
+                      //               ),
+                      //             ),
+                      //             SizedBox(
+                      //                 height: context.responsiveSpacing(4)),
+                      //             Text(
+                      //               _uuid ?? 'Loading UUID...',
+                      //               style: context.responsiveTextStyle(
+                      //                 fontSize: 12.5,
+                      //                 color: lightPurple,
+                      //                 letterSpacing: 0.5,
+                      //               ),
+                      //             ),
+                      //           ],
+                      //         ),
+                      //       ),
+                      //       SizedBox(width: context.responsiveSpacing(12)),
+                      //       GestureDetector(
+                      //         onTap: () async {
+                      //           if (_uuid != null) {
+                      //             await Clipboard.setData(
+                      //                 ClipboardData(text: _uuid!));
+                      //             Fluttertoast.showToast(
+                      //               msg: "UUID copied!",
+                      //               backgroundColor: Colors.grey[800],
+                      //               textColor: Colors.white,
+                      //             );
+                      //           }
+                      //         },
+                      //         child: Container(
+                      //           padding: context.responsivePadding(
+                      //             horizontal: 16,
+                      //             vertical: 8,
+                      //           ),
+                      //           decoration: BoxDecoration(
+                      //             color: UIColors.primaryPurple,
+                      //             borderRadius: BorderRadius.circular(
+                      //               context.responsiveBorderRadius(10),
+                      //             ),
+                      //             boxShadow: [
+                      //               BoxShadow(
+                      //                 color: UIColors.primaryPurple
+                      //                     .withValues(alpha: 0.3),
+                      //                 blurRadius: 8,
+                      //                 spreadRadius: 1,
+                      //               ),
+                      //             ],
+                      //           ),
+                      //           child: Text(
+                      //             "COPY",
+                      //             style: context.responsiveTextStyle(
+                      //               fontSize: 12,
+                      //               fontWeight: FontWeight.bold,
+                      //               color: Colors.white,
+                      //               letterSpacing: 1.1,
+                      //             ),
+                      //           ),
+                      //         ),
+                      //       ),
+                      //     ],
+                      //   ),
+                      // ),
                       SizedBox(height: 20),
                     ],
                   ),
                 ),
                 SizedBox(height: 20),
-                Consumer<AdsProvider>(
-                  builder: (_, ads, __) {
-                    final banner = ads.getBannerAd2;
-                    return banner != null
-                        ? Container(
-                            alignment: Alignment.center,
-                            width: banner.size.width.toDouble(),
-                            height: banner.size.height.toDouble(),
-                            child: AdWidget(ad: banner),
-                          )
-                        : SizedBox.shrink();
-                  },
-                ),
+                Obx(() {
+                  if (!adsController.isBannerAd2Loaded.value &&
+                      adsController.banner2 == null) {
+                    return const SizedBox();
+                  }
+
+                  return SizedBox(
+                    width: adsController.banner2!.size.width.toDouble(),
+                    height: adsController.banner2!.size.height.toDouble(),
+                    child: AdWidget(ad: adsController.banner2!),
+                  );
+                }),
+                // Consumer<AdsProvider>(
+                //   builder: (_, ads, __) {
+                //     final banner = ads.getBannerAd2;
+                //     return banner != null
+                //         ? Container(
+                //             alignment: Alignment.center,
+                //             width: banner.size.width.toDouble(),
+                //             height: banner.size.height.toDouble(),
+                //             child: AdWidget(ad: banner),
+                //           )
+                //         : SizedBox.shrink();
+                //   },
+                // ),
               ],
             ),
           ),

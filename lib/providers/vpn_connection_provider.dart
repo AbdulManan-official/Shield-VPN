@@ -117,6 +117,8 @@ class VpnConnectionProvider with ChangeNotifier {
     _isConnecting = true;
     notifyListeners();
 
+    debugPrint(bypassList.toString());
+
     engine.connect(
       ovpn,
       country,

@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:provider/provider.dart';
 import 'package:vpnprowithjava/View/subscription_manager.dart';
+import 'package:vpnprowithjava/utils/colors.dart';
 import 'package:vpnprowithjava/utils/simple_loading_dialog.dart';
 
-import '../providers/ads_provider.dart';
+import '../providers/ads_controller.dart';
 
 class PremiumAccessScreen extends StatefulWidget {
   // final VoidCallback onSubscriptionStatusChanged;
@@ -38,17 +38,17 @@ class _PremiumAccessScreenState extends State<PremiumAccessScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _scaleAnimation;
-  late Animation<double> _pulseAnimation;
+  // late Animation<double> _pulseAnimation;
 
   // App theme colors
-  static const Color primaryPurple = Color(0xFF8A2BE2);
-  static const Color lightPurple = Color(0xFFB19CD9);
-  static const Color accentTeal = Color(0xFF20E5C7);
-  static const Color connectGreen = Color(0xFF00D4AA);
-  static const Color warmGold = Color(0xFFFFD700);
-  static const Color softGold = Color(0xFFFFF8DC);
-  static const Color darkBg = Color(0xFF1A1A2E);
-  static const Color cardBg = Color(0xFF16213E);
+  static const Color primaryPurple = UIColors.primaryPurple;
+  static const Color lightPurple = UIColors.lightPurple;
+  static const Color accentTeal = UIColors.accentTeal;
+  static const Color connectGreen = UIColors.connectGreen;
+  static const Color warmGold = UIColors.warmGold;
+  static const Color softGold = UIColors.softGold;
+  static const Color darkBg = UIColors.darkBg;
+  static const Color cardBg = UIColors.cardBg;
 
   // late SubscriptionManager _subscriptionManager;
 
@@ -96,9 +96,9 @@ class _PremiumAccessScreenState extends State<PremiumAccessScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
     );
 
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
+    // _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+    //   CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    // );
 
     _animationController.forward();
     _pulseController.repeat(reverse: true);
@@ -188,8 +188,9 @@ class _PremiumAccessScreenState extends State<PremiumAccessScreen>
         hideLoadingDialog();
 
         // widget.onSubscriptionStatusChanged();
-        Provider.of<AdsProvider>(context, listen: false)
-            .setSubscriptionStatus();
+
+        final AdsController adsController = Get.find();
+        adsController.setSubscriptionStatus();
         // ✅ Show success and navigate
         if (mounted) {
           _navigator.pop();
@@ -679,54 +680,55 @@ class _PremiumAccessScreenState extends State<PremiumAccessScreen>
   }
 
   Widget _buildEnhancedHeader(BuildContext context, bool hasSubscription) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final iconSize = (screenWidth * 0.15).clamp(40.0, 80.0);
+    // final screenWidth = MediaQuery.of(context).size.width;
+    // final iconSize = (screenWidth * 0.15).clamp(40.0, 80.0);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       child: Column(
         children: [
-          AnimatedBuilder(
-            animation: _pulseController,
-            builder: (context, child) {
-              return Transform.scale(
-                scale: _pulseAnimation.value,
-                child: Container(
-                  width: iconSize,
-                  height: iconSize,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: hasSubscription
-                          ? [connectGreen, accentTeal]
-                          : [warmGold, softGold, accentTeal],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(iconSize * 0.3),
-                    boxShadow: [
-                      BoxShadow(
-                        color: (hasSubscription ? connectGreen : warmGold)
-                            .withValues(alpha: 0.4),
-                        blurRadius: iconSize * 0.18,
-                        spreadRadius: iconSize * 0.03,
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    hasSubscription ? Icons.check_circle : Icons.diamond,
-                    color: darkBg,
-                    size: iconSize * 0.5,
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 20),
+          // AnimatedBuilder(
+          //   animation: _pulseController,
+          //   builder: (context, child) {
+          //     return Transform.scale(
+          //       scale: _pulseAnimation.value,
+          //       child: Container(
+          //         width: iconSize,
+          //         height: iconSize,
+          //         decoration: BoxDecoration(
+          //           gradient: LinearGradient(
+          //             colors: hasSubscription
+          //                 ? [connectGreen, accentTeal]
+          //                 : [warmGold, softGold, accentTeal],
+          //             begin: Alignment.topLeft,
+          //             end: Alignment.bottomRight,
+          //           ),
+          //           borderRadius: BorderRadius.circular(iconSize * 0.3),
+          //           boxShadow: [
+          //             BoxShadow(
+          //               color: (hasSubscription ? connectGreen : warmGold)
+          //                   .withValues(alpha: 0.4),
+          //               blurRadius: iconSize * 0.18,
+          //               spreadRadius: iconSize * 0.03,
+          //             ),
+          //           ],
+          //         ),
+          //         child: Icon(
+          //           hasSubscription ? Icons.check_circle : Icons.diamond,
+          //           color: darkBg,
+          //           size: iconSize * 0.5,
+          //         ),
+          //       ),
+          //     );
+          //   },
+          // ),
+          const SizedBox(height: 15),
           ShaderMask(
             shaderCallback: (bounds) => LinearGradient(
-              colors: hasSubscription
-                  ? [connectGreen, accentTeal]
-                  : [warmGold, accentTeal, connectGreen],
+              // colors: hasSubscription
+              //     ? [connectGreen, accentTeal]
+              //     : [warmGold, accentTeal, connectGreen],
+              colors: [accentTeal,primaryPurple],
             ).createShader(bounds),
             child: Text(
               hasSubscription ? "Premium Already Active" : "Unlock VPN Max Pro",

@@ -788,7 +788,10 @@ class _ServersScreenState extends State<ServersScreen> {
           vpnProvider.engine.disconnect();
 
           Navigator.of(context).pop(); // Close dialog
-          ToastHelper.showSuccess('${server.country} selected');
+          ToastHelper.showSuccess(
+            '${server.country} selected',
+            logoStr: 'assets/flags/${server.countryCode.toLowerCase()}.png',
+          );
           Navigator.of(context).pop(); // Close current screen
         },
       );
@@ -797,7 +800,10 @@ class _ServersScreenState extends State<ServersScreen> {
       controller.setSelectedTab(widget.tab);
       controller.setSelectedServer(server);
       vpnConfigProvider.vpnConfig = VpnConfig.fromJson(server.toJson());
-      ToastHelper.showSuccess('${server.country} selected');
+      ToastHelper.showSuccess(
+        '${server.country} selected',
+        logoStr: 'assets/flags/${server.countryCode.toLowerCase()}.png',
+      );
       Navigator.of(context).pop(); // Close current screen
     }
   }
@@ -1090,12 +1096,12 @@ class _ServersScreenState extends State<ServersScreen> {
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  if (server.country.isNotEmpty)
-                                    Text(server.country,
-                                        style: const TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.white60)),
-                                  const SizedBox(height: 6),
+                                  // if (server.country.isNotEmpty)
+                                  //   Text(server.country,
+                                  //       style: const TextStyle(
+                                  //           fontSize: 14,
+                                  //           color: Colors.white60)),
+                                  const SizedBox(height: 2),
                                   Row(
                                     children: [
                                       Container(

@@ -1,7 +1,12 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:openvpn_flutter/openvpn_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vpnprowithjava/utils/my_icons_icons.dart';
-import '../../utils/initialization_helper.dart';
+
+import '../../utils/custom_toast.dart';
 import '../home_screen.dart';
 import '../more_screen.dart';
 
@@ -34,18 +39,144 @@ class _BottomNavigatorState extends State<BottomNavigator> {
     ];
   }
 
-  final _initHelper = InitializationHelper();
-
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      initializeAdsAndConsent();
-    });
+    _request();
   }
 
-  Future<void> initializeAdsAndConsent() async {
-    await _initHelper.initialize();
+  Future<void> _request() async {
+    bool has = await requestNotificationPermission();
+    if (has) {
+      _requestVpnPermission();
+      debugPrint("_requestVpnPermission called");
+    } else {
+      Future.delayed(const Duration(seconds: 6), () {
+        _requestVpnPermission();
+        debugPrint("_requestVpnPermission called");
+      });
+    }
+  }
+
+  void _requestVpnPermission() {
+    try {
+      OpenVPN().requestPermissionAndroid();
+    } catch (e) {
+      showLogoToast(
+        "Error requesting VPN permission: $e",
+        color: Colors.red,
+      );
+    }
+  }
+
+  // Future<bool> requestNotificationPermission() async {
+//   var status = await Permission.notification.status;
+//   if (!status.isGranted) {
+//     status = await Permission.notification.request();
+//     if (status.isGranted) {
+//       return true;
+//     } else {
+//       showLogoToast(
+//         "Notification permission denied! VPN notifications may not appear.",
+//         color: Colors.red,
+//       );
+//       return false;
+//     }
+//   }
+//   return true;
+// }
+
+  // Future<void> requestRating() async {
+  //   await requestNotificationPermission();
+  //   await Future.delayed(Duration(seconds: 8));
+  //   ratingService.initializeServicesAndChecking();
+  // }
+
+  Future<bool> requestNotificationPermission() async {
+    // Android < 13 → notifications auto-granted
+    // if (Platform.isAndroid) {
+    //   final sdkInt = int.tryParse(Platform.version.split(' ').first) ?? 0;
+    //   if (sdkInt < 33) {
+    //     debugPrint("✅ Android < 13: Notification permission auto-granted");
+    //     return true;
+    //   }
+    // }
+
+    final status = await Permission.notification.status;
+
+    // ✅ Already granted
+    if (status.isGranted) {
+      debugPrint("✅ Notification permission already granted");
+      return true;
+    }
+
+    // ❓ Not determined → request
+    if (status.isDenied) {
+      final newStatus = await Permission.notification.request();
+
+      if (newStatus.isGranted) {
+        debugPrint("✅ User granted notification permission");
+        return true;
+      }
+    }
+
+    // 🚫 Permanently denied OR denied again
+    final prefs = await SharedPreferences.getInstance();
+    final deniedCount = prefs.getInt('notification_denied_count') ?? 0;
+
+    // Show UI only 1–2 times max
+    if (deniedCount < 2) {
+      await prefs.setInt('notification_denied_count', deniedCount + 1);
+
+      debugPrint("🚫 Notification permission denied ($deniedCount)");
+
+      showLogoToast(
+        "Notifications are disabled. VPN alerts may not appear.",
+        color: Colors.red,
+      );
+
+      Future.delayed(const Duration(milliseconds: 800), () {
+        Get.dialog(
+          AlertDialog(
+            title: const Text("Notifications Disabled"),
+            content: const Text(
+              "To receive VPN Notifications, please enable notifications in app settings.",
+              style: TextStyle(fontSize: 15),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Get.back(),
+                child: const Text(
+                  "Cancel",
+                  style: TextStyle(
+                    color: Colors.tealAccent,
+                    fontSize: 14.5,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  openAppSettings(); // permission_handler helper
+                  Get.back();
+                },
+                child: const Text(
+                  "Open Settings",
+                  style: TextStyle(
+                    color: Colors.tealAccent,
+                    fontSize: 14.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      });
+    } else {
+      debugPrint(
+          "⚠️ Notification permission prompt suppressed (limit reached)");
+    }
+
+    return false;
   }
 
   @override

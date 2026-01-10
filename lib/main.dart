@@ -5,15 +5,13 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:openvpn_flutter/openvpn_flutter.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vpnprowithjava/View/splash_screen.dart';
-import 'package:vpnprowithjava/providers/ads_provider.dart';
+import 'package:vpnprowithjava/providers/ads_controller.dart';
 import 'package:vpnprowithjava/providers/apps_provider.dart';
 import 'package:vpnprowithjava/providers/device_detail_provider.dart';
 import 'package:vpnprowithjava/providers/servers_provider.dart';
@@ -23,6 +21,7 @@ import 'package:vpnprowithjava/utils/preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'View/subscription_manager.dart';
+import 'utils/initialization_helper.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -37,26 +36,34 @@ void main() async {
   await Workmanager().initialize(callbackDispatcher);
 
   await Prefs.init();
-  await _requestNotificationPermission();
 
   Get.put(SubscriptionController(), permanent: true);
+  Get.put(AppsController(), permanent: true);
+  Get.put(AdsController(), permanent: true);
+
+  initializeAdsAndConsent();
 
   SystemChrome.setPreferredOrientations(
       [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]).then((_) {
     runApp(MultiProvider(providers: [
       ChangeNotifierProvider(create: (_) => ServersProvider()),
       ChangeNotifierProvider(create: (_) => DeviceDetailProvider()),
-      ChangeNotifierProvider(create: (_) => AppsProvider()),
+      // ChangeNotifierProvider(create: (_) => AppsProvider()),
       ChangeNotifierProvider(create: (_) => VpnProvider()),
       ChangeNotifierProvider(create: (_) => VpnConnectionProvider()),
-      ChangeNotifierProvider(
-        create: (_) => AdsProvider()
-          ..loadBanner()
-          ..loadBanner2(),
-      ),
+      // ChangeNotifierProvider(create: (_) => AdsProvider()..loadBanner()),
       // ChangeNotifierProvider(create: (_) => SubscriptionManager()..loadSubscriptionStatus()),
     ], child: const MyApp()));
   });
+}
+
+Future<void> initializeAdsAndConsent() async {
+  final AdsController adsController = Get.find();
+  final initHelper = InitializationHelper();
+  await initHelper.initialize();
+  adsController.preloadInterstitial();
+  adsController.loadBanner2();
+  adsController.loadBanner();
 }
 
 // Add this callback function (outside your class)
@@ -114,24 +121,6 @@ Future<bool> disconnectVpnCallback() async {
     debugPrint("Error disconnecting VPN in background: $e");
     return false;
   }
-}
-
-Future<bool> _requestNotificationPermission() async {
-  var status = await Permission.notification.status;
-  if (!status.isGranted) {
-    status = await Permission.notification.request();
-    if (status.isGranted) {
-      return true;
-    } else {
-      Fluttertoast.showToast(
-        msg:
-            "Notification permission denied! VPN notifications may not appear.",
-        backgroundColor: Colors.red,
-      );
-      return false;
-    }
-  }
-  return true;
 }
 
 class MyApp extends StatefulWidget {
@@ -248,7 +237,9 @@ class _MyAppState extends State<MyApp> {
         hasActiveSubscription || _checkOtherSubscriptionConditions();
     Prefs.setBool('isSubscribed', newStatus);
     if (mounted) {
-      Provider.of<AdsProvider>(context, listen: false).setSubscriptionStatus();
+      final AdsController adsController = Get.find();
+      adsController.setSubscriptionStatus();
+      // Provider.of<AdsProvider>(context, listen: false).setSubscriptionStatus();
     }
   }
 
@@ -267,7 +258,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       navigatorKey: rootNavigatorKey,
-      navigatorObservers: [observer],
+      navigatorObservers: <NavigatorObserver>[observer],
       title: 'VPN Max - Ultra Responsive',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
@@ -343,3 +334,232 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
+
+//
+// import 'package:flutter/material.dart';
+// import 'dart:math' as math;
+//
+// void main() {
+//   runApp(const MyApp());
+// }
+//
+// class MyApp extends StatelessWidget {
+//   const MyApp({Key? key}) : super(key: key);
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       debugShowCheckedModeBanner: false,
+//       home: Scaffold(
+//         backgroundColor: Colors.black,
+//         body: Center(
+//           child: AnimatedVFNMaxLogo(),
+//         ),
+//       ),
+//     );
+//   }
+// }
+//
+// class AnimatedVFNMaxLogo extends StatefulWidget {
+//   @override
+//   _AnimatedVFNMaxLogoState createState() => _AnimatedVFNMaxLogoState();
+// }
+//
+// class _AnimatedVFNMaxLogoState extends State<AnimatedVFNMaxLogo>
+//     with SingleTickerProviderStateMixin {
+//   late AnimationController _controller;
+//
+//   @override
+//   void initState() {
+//     super.initState();
+//     _controller = AnimationController(
+//       duration: const Duration(seconds: 3),
+//       vsync: this,
+//     );
+//   }
+//
+//   @override
+//   void dispose() {
+//     _controller.dispose();
+//     super.dispose();
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return AnimatedBuilder(
+//       animation: _controller,
+//       builder: (context, child) {
+//         return CustomPaint(
+//           size: Size(300, 300),
+//           painter: VFNMaxPainter(_controller.value),
+//         );
+//       },
+//     );
+//   }
+// }
+//
+// class VFNMaxPainter extends CustomPainter {
+//   final double animationValue;
+//   static const Color accentTeal = Color(0xFF20E5C7);
+//   static const Color paintColor = Colors.blueAccent;
+//
+//   VFNMaxPainter(this.animationValue);
+//
+//   @override
+//   void paint(Canvas canvas, Size size) {
+//     final center = Offset(size.width / 2, size.height / 2);
+//     final radius = size.width * 0.35;
+//
+//     // Paint for the main circles with glow effect
+//     final circlePaint = Paint()
+//       ..color = Colors.blue
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 3.0
+//       ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8);
+//
+//     // Draw the arcs instead of full circles
+//     final rect = Rect.fromCircle(center: center, radius: radius);
+//     final innerRect = Rect.fromCircle(center: center, radius: radius * 0.93);
+//
+//     // Define arc segments (gaps where connection lines are)
+//     // Each arc segment defined by start angle and sweep angle
+//     final rotationOffset = animationValue * 2 * math.pi;
+//
+//     // Arc 1: From right side, going clockwise, stopping before top-left connection
+//     canvas.drawArc(rect, -0.4 + rotationOffset, 1.55, false, circlePaint);
+//     canvas.drawArc(innerRect, -0.4 + rotationOffset, 1.55, false, circlePaint);
+//
+//     // Arc 2: Small arc between top connections
+//     canvas.drawArc(rect, 1.9 + rotationOffset, 0.5, false, circlePaint);
+//     canvas.drawArc(innerRect, 1.9 + rotationOffset, 0.5, false, circlePaint);
+//
+//     // Arc 3: Bottom arc
+//     canvas.drawArc(rect, 3.8 + rotationOffset, 2.0, false, circlePaint);
+//     canvas.drawArc(innerRect, 3.8 + rotationOffset, 2.0, false, circlePaint);
+//
+//     // Paint for the connection lines (without glow)
+//     final linePaint = Paint()
+//       ..color = Colors.blue
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 3.0
+//       ..strokeCap = StrokeCap.round;
+//
+//     // Paint for connection lines with glow
+//     final lineGlowPaint = Paint()
+//       ..color = Colors.blue
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 3.0
+//       ..strokeCap = StrokeCap.round
+//       ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8);
+//
+//     // Paint for dots
+//     final dotPaint = Paint()
+//       ..color = Colors.blue
+//       ..style = PaintingStyle.fill
+//       ..maskFilter = MaskFilter.blur(BlurStyle.normal, 4);
+//
+//     final dotOutlinePaint = Paint()
+//       ..color = Colors.blue
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 2.0;
+//
+//     // Define the 3 connection points and their angles (matching the image)
+//     final connections = [
+//       {'angle': math.pi * 1, 'length': 45.0}, // Top-left
+//       {'angle': math.pi * 0.3, 'length': 45.0}, // Top-right
+//       {'angle': math.pi * 1.6, 'length': 45.0}, // Bottom-right
+//     ];
+//
+//     // Draw the connection lines
+//     for (var connection in connections) {
+//       final angle = (connection['angle'] as double) + rotationOffset;
+//       final length = connection['length'] as double;
+//
+//       // Point on the outer circle
+//       final circlePoint = Offset(
+//         center.dx + radius * math.cos(angle),
+//         center.dy + radius * math.sin(angle),
+//       );
+//
+//       // End point of the line
+//       final endPoint = Offset(
+//         center.dx + (radius + length) * math.cos(angle),
+//         center.dy + (radius + length) * math.sin(angle),
+//       );
+//
+//       // Draw line with glow
+//       canvas.drawLine(circlePoint, endPoint, lineGlowPaint);
+//
+//       // Draw dot at the end
+//       canvas.drawCircle(endPoint, 6, dotPaint);
+//       canvas.drawCircle(endPoint, 6, dotOutlinePaint);
+//     }
+//
+//     // Draw horizontal lines extending left and right with glow
+//     final horizontalLinePaint = Paint()
+//       ..color = Colors.blue
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 3.0
+//       ..strokeCap = StrokeCap.round
+//       ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8);
+//
+//     // Left line with dot
+//     final leftLineStart = Offset(center.dx - radius - 20, center.dy);
+//     final leftLineEnd = Offset(20, center.dy);
+//     canvas.drawLine(leftLineStart, leftLineEnd, horizontalLinePaint);
+//     canvas.drawCircle(leftLineEnd, 6, dotPaint);
+//     canvas.drawCircle(leftLineEnd, 6, dotOutlinePaint);
+//
+//     // Right line with dot
+//     final rightLineStart = Offset(center.dx + radius + 20, center.dy);
+//     final rightLineEnd = Offset(size.width - 20, center.dy);
+//     canvas.drawLine(rightLineStart, rightLineEnd, horizontalLinePaint);
+//     canvas.drawCircle(rightLineEnd, 6, dotPaint);
+//     canvas.drawCircle(rightLineEnd, 6, dotOutlinePaint);
+//
+//     // Draw text
+//     final textPainterVPN = TextPainter(
+//       text: TextSpan(
+//         text: 'VPN ',
+//         style: TextStyle(
+//           color: Colors.white,
+//           fontSize: 36,
+//           fontWeight: FontWeight.bold,
+//           letterSpacing: 1,
+//         ),
+//       ),
+//       textDirection: TextDirection.ltr,
+//     );
+//     textPainterVPN.layout();
+//
+//     final textPainterMax = TextPainter(
+//       text: TextSpan(
+//         text: 'Max',
+//         style: TextStyle(
+//           color: Colors.green,
+//           fontSize: 36,
+//           fontWeight: FontWeight.bold,
+//           letterSpacing: 1,
+//         ),
+//       ),
+//       textDirection: TextDirection.ltr,
+//     );
+//     textPainterMax.layout();
+//
+//     final totalWidth = textPainterVPN.width + textPainterMax.width;
+//     final textStart = center.dx - totalWidth / 2;
+//
+//     textPainterVPN.paint(
+//       canvas,
+//       Offset(textStart, center.dy - textPainterVPN.height / 2),
+//     );
+//
+//     textPainterMax.paint(
+//       canvas,
+//       Offset(textStart + textPainterVPN.width, center.dy - textPainterMax.height / 2),
+//     );
+//   }
+//
+//   @override
+//   bool shouldRepaint(VFNMaxPainter oldDelegate) => true;
+// }

@@ -6,6 +6,7 @@ import 'package:openvpn_flutter/openvpn_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:vpnprowithjava/View/Widgets/internet_connection_manager.dart';
 import 'package:vpnprowithjava/utils/colors.dart';
+import 'package:vpnprowithjava/utils/custom_toast.dart';
 
 import '../../Model/vpn_config.dart';
 import '../../Model/vpn_server.dart';
@@ -22,10 +23,10 @@ class ToastHelper {
   static void showToast({
     required String message,
     Color backgroundColor = Colors.green,
-    ToastGravity gravity = ToastGravity.BOTTOM,
-    Toast length = Toast.LENGTH_SHORT,
+    Duration duration = const Duration(milliseconds: 2500),
     bool preventDuplicates = true,
     bool forceClear = false,
+    String? logoStr,
   }) {
     if (_isShowing && !forceClear) return;
 
@@ -38,31 +39,40 @@ class ToastHelper {
     if (forceClear) {
       Fluttertoast.cancel();
       Future.delayed(const Duration(milliseconds: 100), () {
-        _showToastInternal(message, backgroundColor, gravity, length);
+        _showToastInternal(
+          message,
+          backgroundColor,
+          duration: duration,
+          logoStr: logoStr ?? 'assets/images/vpnlogo.png',
+        );
       });
     } else {
-      _showToastInternal(message, backgroundColor, gravity, length);
+      _showToastInternal(
+        message,
+        backgroundColor,
+        duration: duration,
+        logoStr: logoStr ?? 'assets/images/vpnlogo.png',
+      );
     }
   }
 
-  static void _showToastInternal(String message, Color backgroundColor,
-      ToastGravity gravity, Toast length) {
+  static void _showToastInternal(
+    String message,
+    Color backgroundColor, {
+    Duration duration = const Duration(milliseconds: 2500),
+    String? logoStr,
+  }) {
     _lastMessage = message;
     _isShowing = true;
 
-    Fluttertoast.showToast(
-      msg: message,
-      toastLength: length,
-      gravity: gravity,
-      backgroundColor: backgroundColor,
-      textColor: Colors.white,
-      fontSize: 14.0,
+    showLogoToast(
+      message,
+      duration: duration,
+      color: backgroundColor,
+      logoStr: logoStr ?? 'assets/images/vpnlogo.png',
     );
 
-    _toastTimer = Timer(
-        length == Toast.LENGTH_LONG
-            ? const Duration(seconds: 4)
-            : const Duration(seconds: 2), () {
+    _toastTimer = Timer(duration, () {
       _lastMessage = null;
       _isShowing = false;
     });
@@ -72,16 +82,17 @@ class ToastHelper {
     showToast(
       message: message,
       backgroundColor: Colors.red.shade600,
-      length: Toast.LENGTH_LONG,
+      duration: const Duration(milliseconds: 3000),
       forceClear: true,
     );
   }
 
-  static void showSuccess(String message) {
+  static void showSuccess(String message, {String? logoStr}) {
     showToast(
       message: message,
       backgroundColor: Colors.green.shade600,
       forceClear: true,
+      logoStr: logoStr ?? 'assets/images/vpnlogo.png',
     );
   }
 
@@ -96,7 +107,7 @@ class ToastHelper {
     showToast(
       message: message,
       backgroundColor: Colors.orange.shade600,
-      length: Toast.LENGTH_LONG,
+      duration: const Duration(milliseconds: 3000),
     );
   }
 
@@ -130,12 +141,24 @@ class _RecommendedServerState extends State<RecommendedServer> {
   bool _isProcessing = false;
   String _currentStatus = '';
   bool _hasInternetConnection = true;
+
   // BuildContext? _dialogContext;
   bool dialogClosed = false;
+
+  late List<VpnServer> _filteredServers;
 
   @override
   void initState() {
     super.initState();
+
+    // Remove Spain & United Kingdom for THIS page only
+    _filteredServers = widget.servers.where((server) {
+      final country = server.country.toLowerCase();
+      return country != 'spain' &&
+          country != 'united kingdom' &&
+          country != 'uk'; // safety
+    }).toList();
+
     InternetConnectionManager.initialize(_onInternetConnectionChanged);
   }
 
@@ -739,9 +762,9 @@ class _RecommendedServerState extends State<RecommendedServer> {
   //   );
   // }
   void showCancelConfirmationDialog(
-      BuildContext context, {
-        required VoidCallback onConfirm,
-      }) {
+    BuildContext context, {
+    required VoidCallback onConfirm,
+  }) {
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -806,13 +829,12 @@ class _RecommendedServerState extends State<RecommendedServer> {
     );
   }
 
-
   void onServerClicked(VpnServer server) {
     final vpnProvider =
-    Provider.of<VpnConnectionProvider>(context, listen: false);
+        Provider.of<VpnConnectionProvider>(context, listen: false);
     final controller = Provider.of<ServersProvider>(context, listen: false);
     final vpnConfigProvider = Provider.of<VpnProvider>(context, listen: false);
-    final serverIndex = widget.servers.indexOf(server);
+    final serverIndex = _filteredServers.indexOf(server);
     final isConnected = vpnProvider.stage == VPNStage.connected;
     bool isConnecting = vpnProvider.isConnecting;
 
@@ -827,7 +849,10 @@ class _RecommendedServerState extends State<RecommendedServer> {
           vpnProvider.engine.disconnect();
 
           Navigator.of(context).pop(); // Close dialog
-          ToastHelper.showSuccess('${server.country} selected');
+          ToastHelper.showSuccess(
+            '${server.country} selected',
+            logoStr: 'assets/flags/${server.countryCode.toLowerCase()}.png',
+          );
           Navigator.of(context).pop(); // Close current screen
         },
       );
@@ -836,7 +861,10 @@ class _RecommendedServerState extends State<RecommendedServer> {
       controller.setSelectedTab(widget.tab);
       controller.setSelectedServer(server);
       vpnConfigProvider.vpnConfig = VpnConfig.fromJson(server.toJson());
-      ToastHelper.showSuccess('${server.country} selected');
+      ToastHelper.showSuccess(
+        '${server.country} selected',
+        logoStr: 'assets/flags/${server.countryCode.toLowerCase()}.png',
+      );
       Navigator.of(context).pop(); // Close current screen
     }
   }
@@ -850,7 +878,7 @@ class _RecommendedServerState extends State<RecommendedServer> {
             backgroundColor: UIColors.darkBg,
             body: Center(child: CircularProgressIndicator()),
           );
-        } else if (widget.servers.isEmpty) {
+        } else if (_filteredServers.isEmpty) {
           return Scaffold(
             backgroundColor: UIColors.darkBg,
             body: Center(
@@ -967,7 +995,7 @@ class _RecommendedServerState extends State<RecommendedServer> {
                               color: UIColors.accentTeal, size: 18),
                         ),
                         const SizedBox(width: 12),
-                        Text('${widget.servers.length * 2} servers available',
+                        Text('${_filteredServers.length * 2} servers available',
                             style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 14,
@@ -1042,10 +1070,10 @@ class _RecommendedServerState extends State<RecommendedServer> {
                   child: ListView.separated(
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: 12),
-                    itemCount: widget.servers.length * 2,
+                    itemCount: _filteredServers.length * 2,
                     itemBuilder: (BuildContext context, int index) {
-                      int adjustedIndex = index % widget.servers.length;
-                      final server = widget.servers[adjustedIndex];
+                      int adjustedIndex = index % _filteredServers.length;
+                      final server = _filteredServers[adjustedIndex];
 
                       final isSelected =
                           index == controller.getSelectedIndex() &&
@@ -1070,7 +1098,7 @@ class _RecommendedServerState extends State<RecommendedServer> {
                           : UIColors.cardBg;
 
                       return InkWell(
-                        onTap: ()=>onServerClicked(server),
+                        onTap: () => onServerClicked(server),
                         // onTap: _hasInternetConnection && !_isProcessing
                         //     ? () => _changeServerLocation(context, server)
                         //     : null,
@@ -1139,12 +1167,12 @@ class _RecommendedServerState extends State<RecommendedServer> {
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  if (server.country.isNotEmpty)
-                                    Text(server.country,
-                                        style: const TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.white60)),
-                                  const SizedBox(height: 6),
+                                  // if (server.country.isNotEmpty)
+                                  //   Text(server.country,
+                                  //       style: const TextStyle(
+                                  //           fontSize: 14,
+                                  //           color: Colors.white60)),
+                                  const SizedBox(height: 2),
                                   Row(
                                     children: [
                                       Container(

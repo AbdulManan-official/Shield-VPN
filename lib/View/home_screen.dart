@@ -5,8 +5,8 @@ import 'dart:math';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:http/http.dart' as http;
 import 'package:openvpn_flutter/openvpn_flutter.dart';
@@ -20,14 +20,15 @@ import 'package:vpnprowithjava/View/server_tabs.dart';
 import 'package:vpnprowithjava/View/splash_screen.dart';
 import 'package:vpnprowithjava/View/subscription_manager.dart';
 import 'package:vpnprowithjava/utils/colors.dart';
+import 'package:vpnprowithjava/utils/custom_toast.dart';
 import 'package:workmanager/workmanager.dart';
 
-import '../Model/application_model.dart';
-import '../providers/ads_provider.dart';
+import '../providers/ads_controller.dart';
 import '../providers/apps_provider.dart';
 import '../providers/servers_provider.dart';
 import '../providers/vpn_connection_provider.dart';
-import '../utils/get_apps.dart';
+import '../utils/analytics_service.dart';
+import '../utils/rating_service.dart';
 
 // Extension for responsive design
 extension ResponsiveContext on BuildContext {
@@ -65,6 +66,7 @@ class _HomeScreenState extends State<HomeScreen>
   // blink
   late AnimationController _blinkController;
   late Animation<double> _blinkAnimation;
+
   // late Animation<double> _scaleAnimation;
 
   // late Animation<double> _fadeAnimation;
@@ -80,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen>
   double _progress = 0;
   double _targetProgress = 90;
 
-  static const int _maxWaitSeconds = 20;
+  static const int _maxWaitSeconds = 15;
   int _waitedSeconds = 0;
 
   late ServersProvider _myProvider;
@@ -88,6 +90,7 @@ class _HomeScreenState extends State<HomeScreen>
   // late SubscriptionManager subscriptionManager;
 
   final SubscriptionController subscriptionManager = Get.find();
+  final ratingService = RatingService();
 
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
@@ -117,13 +120,15 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  late AdsProvider _adsProvider;
+  final AdsController adsController = Get.find();
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _adsProvider = Provider.of<AdsProvider>(context, listen: false);
-  }
+  // late AdsProvider _adsProvider;
+  //
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   _adsProvider = Provider.of<AdsProvider>(context, listen: false);
+  // }
 
   @override
   void initState() {
@@ -181,18 +186,18 @@ class _HomeScreenState extends State<HomeScreen>
       _connectivitySubscription =
           Connectivity().onConnectivityChanged.listen(_updateConnectionStatus);
 
-      _adsProvider.preloadInterstitial();
-      // _adsProvider.loadBanner();
+      // adsController.preloadInterstitial();
+      // adsController.loadBanner();
 
-      _requestPermission();
       _checkSubscriptionStatus();
+      // _requestPermission();
 
       final vpnConnectionProvider =
           Provider.of<VpnConnectionProvider>(context, listen: false);
       await Provider.of<ServersProvider>(context, listen: false).initialize();
       _loadAppState();
       await vpnConnectionProvider.restoreVpnState();
-      await _getAllApps();
+      // await _getAllApps();
     });
   }
 
@@ -203,78 +208,59 @@ class _HomeScreenState extends State<HomeScreen>
     _blinkController.dispose();
     _progressTimer?.cancel();
 
-    _adsProvider.disposeBanner();
+    adsController.disposeBanner();
     _progressTimer?.cancel();
 
     WidgetsBinding.instance.removeObserver(this);
     _connectivitySubscription?.cancel();
     _saveAppState();
 
-    final ads = Provider.of<AdsProvider>(context, listen: false);
-    ads.disposeAll();
-
+    // final ads = Provider.of<AdsProvider>(context, listen: false);
+    // adsController.disposeAll();
     super.dispose();
   }
 
-  Future<void> _getAllApps() async {
-    final appsProvider = Provider.of<AppsProvider>(context, listen: false);
-
-    if (appsProvider.hasLoadedApps) {
-      // Already loaded, no need to fetch again
-      return;
-    }
-
-    appsProvider.updateLoader(true);
-
-    try {
-      await appsProvider.setDisallowList();
-
-      final results = await Future.wait([
-        GetApps.GetAllAppInfo(),
-        GetApps.GetSocialSystemApps(),
-      ]);
-
-      final userApps = results[0];
-      final socialSystemApps = results[1];
-
-      final allApps = [
-        ...userApps.map((app) => ApplicationModel(isSelected: true, app: app)),
-        ...socialSystemApps
-            .map((app) => ApplicationModel(isSelected: true, app: app)),
-      ];
-
-      allApps.sort((a, b) =>
-          (a.app.name).toLowerCase().compareTo((b.app.name).toLowerCase()));
-
-      appsProvider.setAllApps(allApps);
-    } catch (e, stack) {
-      debugPrint("Error loading apps in home: $e\n$stack");
-    } finally {
-      appsProvider.updateLoader(false);
-    }
-  }
+  // Future<void> _getAllApps() async {
+  //   final appsProvider = Provider.of<AppsProvider>(context, listen: false);
+  //
+  //   if (appsProvider.hasLoadedApps) {
+  //     // Already loaded, no need to fetch again
+  //     return;
+  //   }
+  //
+  //   appsProvider.updateLoader(true);
+  //
+  //   try {
+  //     await appsProvider.setDisallowList();
+  //
+  //     final results = await Future.wait([
+  //       GetApps.GetAllAppInfo(),
+  //       GetApps.GetSocialSystemApps(),
+  //     ]);
+  //
+  //     final userApps = results[0];
+  //     final socialSystemApps = results[1];
+  //
+  //     final allApps = [
+  //       ...userApps.map((app) => ApplicationModel(isSelected: true, app: app)),
+  //       ...socialSystemApps
+  //           .map((app) => ApplicationModel(isSelected: true, app: app)),
+  //     ];
+  //
+  //     allApps.sort((a, b) =>
+  //         (a.app.name).toLowerCase().compareTo((b.app.name).toLowerCase()));
+  //
+  //     appsProvider.setAllApps(allApps);
+  //   } catch (e, stack) {
+  //     debugPrint("Error loading apps in home: $e\n$stack");
+  //   } finally {
+  //     appsProvider.updateLoader(false);
+  //   }
+  // }
 
   Future<void> _checkSubscriptionStatus() async {
     debugPrint("_checkSubscriptionStatus CALLED--");
     subscriptionManager.loadSubscriptionStatus();
-  }
-
-  void _requestPermission() async {
-    try {
-      bool hasVpnPermission = await OpenVPN().requestPermissionAndroid();
-      if (!hasVpnPermission) {
-        Fluttertoast.showToast(
-          msg:
-              "VPN Permission not granted! Please grant permission to use VPN.",
-          backgroundColor: Colors.red,
-        );
-      }
-    } catch (e) {
-      Fluttertoast.showToast(
-        msg: "Error requesting VPN permission: $e",
-        backgroundColor: Colors.red,
-      );
-    }
   }
 
   Future<void> _saveAppState() async {
@@ -354,15 +340,15 @@ class _HomeScreenState extends State<HomeScreen>
 
     _saveAppState();
 
-    Fluttertoast.showToast(
-      msg: "VPN Connected Successfully",
-      backgroundColor: Colors.green,
+    showLogoToast(
+      "Connected",
+      color: Colors.green,
     );
   }
 
   double _progressSpeed() {
     if (_progress < 60) return 1.2; // Fast
-    if (_progress < 90) return 0.6; // Medium
+    if (_progress < 90) return 0.8; // Medium
     return 0.3; // Smooth finish
   }
 
@@ -406,21 +392,20 @@ class _HomeScreenState extends State<HomeScreen>
 
     // ❌ Timeout
     if (_waitedSeconds >= _maxWaitSeconds) {
-      _progressTimer?.cancel();
       _handleConnectionTimeout();
     }
   }
 
   void _handleConnectionTimeout() {
     setState(() {
-      _isWaitingForServer = false;
       _isLoading = false;
-      _progress = 0;
     });
+    OpenVPN().disconnect();
+    _disconnect();
 
-    Fluttertoast.showToast(
-      msg: "Server is taking too long. Please try again.",
-      backgroundColor: Colors.red,
+    showLogoToast(
+      "Server is taking too long. Please try again.",
+      color: Colors.red,
     );
   }
 
@@ -567,8 +552,7 @@ class _HomeScreenState extends State<HomeScreen>
 
                       // Then handle refresh
                       try {
-                        await Provider.of<AdsProvider>(context, listen: false)
-                            .disposeBanner();
+                        await adsController.disposeBanner();
 
                         if (mounted) {
                           Navigator.pushAndRemoveUntil(
@@ -626,7 +610,7 @@ class _HomeScreenState extends State<HomeScreen>
           !results.contains(ConnectivityResult.none) && results.isNotEmpty;
 
       if (!hasBasicConnection) {
-        _failureCount++;
+        // _failureCount++;
         debugPrint('❌ no basic connection (failureCount=$_failureCount)');
         _handleFailure(reason: "No network");
         return;
@@ -661,10 +645,12 @@ class _HomeScreenState extends State<HomeScreen>
     debugPrint(
         "⚠️ Connection failure ($_failureCount/$_maxFailuresBeforeDialog): $reason");
 
-    // Grace period - adjust _maxFailuresBeforeDialog for production
-    if (_failureCount < _maxFailuresBeforeDialog) {
-      debugPrint("⏳ grace period - not showing dialog yet");
-      return;
+    if (reason != "No network") {
+      // Grace period - adjust _maxFailuresBeforeDialog for production
+      if (_failureCount < _maxFailuresBeforeDialog) {
+        debugPrint("⏳ grace period - not showing dialog yet");
+        return;
+      }
     }
 
     // mark hasRealInternet false
@@ -686,18 +672,18 @@ class _HomeScreenState extends State<HomeScreen>
 
   String formatSpeed(double bytesPerSecond) {
     if (bytesPerSecond <= 0) {
-      return "0 KB/s";
+      return "0 KB";
     }
 
     const kb = 1024;
     const mb = kb * 1024;
 
     if (bytesPerSecond < kb) {
-      return "${bytesPerSecond.toStringAsFixed(0)} B/s";
+      return "${bytesPerSecond.toStringAsFixed(0)} B";
     } else if (bytesPerSecond < mb) {
-      return "${(bytesPerSecond / kb).toStringAsFixed(2)} KB/s";
+      return "${(bytesPerSecond / kb).toStringAsFixed(2)} KB";
     } else {
-      return "${(bytesPerSecond / mb).toStringAsFixed(2)} MB/s";
+      return "${(bytesPerSecond / mb).toStringAsFixed(2)} MB";
     }
   }
 
@@ -957,7 +943,8 @@ class _HomeScreenState extends State<HomeScreen>
         final adBannerColor = connected
             ? UIColors.connectedBg.withValues(alpha: 0.9)
             : UIColors.cardBg;
-        final textColor = connected ? Colors.white : Colors.white70;
+        // final textColor = connected ? Colors.white : Colors.white70;
+        final textColor = Colors.white;
 
         return Scaffold(
           body: Stack(
@@ -1001,89 +988,77 @@ class _HomeScreenState extends State<HomeScreen>
                                   children: [
                                     TextSpan(
                                       text: "VPN",
-                                      style: TextStyle(
+                                      style: GoogleFonts.montserrat(
                                         color: Colors.white,
-                                        fontSize: titleFontSize,
+                                        fontSize: titleFontSize - 1,
                                         fontWeight: FontWeight.bold,
-                                        letterSpacing: 1.2,
+                                        // letterSpacing: 1.2,
                                       ),
                                     ),
                                     TextSpan(
                                       text: "Max",
-                                      style: TextStyle(
+                                      style: GoogleFonts.montserrat(
                                         color: connected
                                             ? UIColors.accentTeal
                                             : UIColors.primaryPurple,
-                                        fontSize: titleFontSize,
+                                        fontSize: titleFontSize - 1,
                                         fontWeight: FontWeight.bold,
-                                        letterSpacing: 1.2,
+                                        // letterSpacing: 1.2,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
                               const Spacer(),
-                              Container(
-                                margin: EdgeInsets.only(top: topPadding * 0.25),
-                                decoration: BoxDecoration(
-                                  color: appFilterBackgroundColor,
-                                  borderRadius:
-                                      BorderRadius.circular(borderRadius),
-                                  border: Border.all(
-                                    color: connected
-                                        ? UIColors.accentTeal
-                                            .withValues(alpha: 0.3)
-                                        : UIColors.primaryPurple
-                                            .withValues(alpha: 0.3),
+                              InkWell(
+                                onTap: () {
+                                  if (!connected) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            AllowedAppsScreen(),
+                                      ),
+                                    );
+                                  } else {
+                                    showLogoToast(
+                                        "Please disconnect the VPN to manage app filters.",
+                                        duration: const Duration(seconds: 4));
+                                  }
+                                },
+                                child: Container(
+                                  margin:
+                                      EdgeInsets.only(top: topPadding * 0.25),
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 10, horizontal: 12),
+                                  decoration: BoxDecoration(
+                                    color: appFilterBackgroundColor,
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                      color: connected
+                                          ? UIColors.accentTeal
+                                              .withValues(alpha: 0.3)
+                                          : UIColors.primaryPurple
+                                              .withValues(alpha: 0.3),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: (connected
+                                                ? UIColors.accentTeal
+                                                : UIColors.primaryPurple)
+                                            .withValues(alpha: 0.2),
+                                        blurRadius: borderRadius,
+                                        spreadRadius: 1,
+                                      ),
+                                    ],
                                   ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: (connected
-                                              ? UIColors.accentTeal
-                                              : UIColors.primaryPurple)
-                                          .withValues(alpha: 0.2),
-                                      blurRadius: borderRadius,
-                                      spreadRadius: 1,
-                                    ),
-                                  ],
-                                ),
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.transparent,
-                                    shadowColor: Colors.transparent,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(borderRadius),
-                                    ),
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: sidePadding - 8,
-                                      vertical: topPadding * 0.2,
-                                    ),
-                                  ),
-                                  onPressed: () {
-                                    if (!_isConnected) {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const AllowedAppsScreen(),
-                                        ),
-                                      );
-                                    } else {
-                                      Fluttertoast.showToast(
-                                        msg:
-                                            "Please disconnect the VPN to manage app filters.",
-                                        // backgroundColor: Colors.red,
-                                        toastLength: Toast.LENGTH_LONG,
-                                      );
-                                    }
-                                  },
                                   child: Text(
                                     "APP FILTER",
                                     style: TextStyle(
-                                      color: connected
-                                          ? UIColors.accentTeal
-                                          : UIColors.primaryPurple,
+                                      color: Colors.white,
+                                      // color: connected
+                                      //     ? UIColors.accentTeal
+                                      //     : UIColors.primaryPurple,
                                       fontWeight: FontWeight.bold,
                                       letterSpacing: 1.1,
                                       fontSize: appFilterFontSize - 1,
@@ -1097,13 +1072,13 @@ class _HomeScreenState extends State<HomeScreen>
                           Container(
                             width: double.infinity,
                             padding: EdgeInsets.symmetric(
-                                vertical: spacingSmall * 0.65),
+                                vertical: spacingSmall * 0.7),
                             decoration: BoxDecoration(
                               color: blockBackgroundColor,
                               borderRadius: BorderRadius.circular(borderRadius),
                               border: Border.all(
-                                color: speedBlockColor.withValues(alpha: 0.4),
-                                width: 1.5,
+                                color: speedBlockColor.withValues(alpha: 0.2),
+                                width: 1.2,
                               ),
                               boxShadow: [
                                 BoxShadow(
@@ -1132,11 +1107,10 @@ class _HomeScreenState extends State<HomeScreen>
                                       children: [
                                         Text(
                                           "DOWNLOAD",
-                                          style: TextStyle(
+                                          style: GoogleFonts.montserrat(
                                             color: textColor,
-                                            fontWeight: FontWeight.w900,
-                                            fontSize: speedLabelFontSize,
-                                            letterSpacing: 1.2,
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: speedLabelFontSize - 1,
                                           ),
                                         ),
                                         SizedBox(height: spacingSmall * 0.25),
@@ -1148,11 +1122,11 @@ class _HomeScreenState extends State<HomeScreen>
                                                           "0") ??
                                                       0,
                                                 )
-                                              : "0 KB/s",
-                                          style: TextStyle(
+                                              : "0 KB",
+                                          style: GoogleFonts.montserrat(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
-                                            fontSize: speedValueFontSize,
+                                            fontSize: speedValueFontSize + 1.5,
                                           ),
                                         ),
                                       ],
@@ -1182,11 +1156,10 @@ class _HomeScreenState extends State<HomeScreen>
                                       children: [
                                         Text(
                                           "UPLOAD",
-                                          style: TextStyle(
+                                          style: GoogleFonts.montserrat(
                                             color: textColor,
-                                            fontWeight: FontWeight.w900,
+                                            fontWeight: FontWeight.w800,
                                             fontSize: speedLabelFontSize,
-                                            letterSpacing: 1.2,
                                           ),
                                         ),
                                         SizedBox(height: spacingSmall * 0.25),
@@ -1199,11 +1172,11 @@ class _HomeScreenState extends State<HomeScreen>
                                                           "0") ??
                                                       0,
                                                 )
-                                              : "0 KB/s",
-                                          style: TextStyle(
+                                              : "0 KB",
+                                          style: GoogleFonts.montserrat(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
-                                            fontSize: speedValueFontSize,
+                                            fontSize: speedValueFontSize + 1.5,
                                           ),
                                         ),
                                       ],
@@ -1456,20 +1429,29 @@ class _HomeScreenState extends State<HomeScreen>
                                         onPressed: () async {
                                           showEnhancedDisconnectDialog(context,
                                               () async {
-                                            final ads =
-                                                Provider.of<AdsProvider>(
-                                                    context,
-                                                    listen: false);
-                                            await ads.showInterstitial();
+                                            // final ads =
+                                            // Provider.of<AdsProvider>(
+                                            //     context,
+                                            //     listen: false);
+                                            await adsController
+                                                .showInterstitial();
 
                                             await _disconnect();
                                             await vpnValue.disconnect();
                                             vpnValue.resetRadius();
-                                            Fluttertoast.showToast(
-                                              msg:
-                                                  "VPN Disconnected Successfully",
-                                              backgroundColor: Colors.red,
+                                            AnalyticsService.logFirebaseEvent(
+                                              'vpn_disconnect',
                                             );
+                                            // Fluttertoast.showToast(
+                                            //   msg:
+                                            //       "VPN Disconnected Successfully",
+                                            //   backgroundColor: Colors.red,
+                                            // );
+                                            showLogoToast(
+                                              "Disconnected",
+                                              color: Colors.red,
+                                            );
+                                            ratingService.showRating();
                                           });
                                         },
                                         height: connectBtnHeight,
@@ -1480,42 +1462,45 @@ class _HomeScreenState extends State<HomeScreen>
                                     // Default connect button
                                     return ConnectButton(
                                       onPressed: () async {
-                                        final ads = Provider.of<AdsProvider>(
-                                            context,
-                                            listen: false);
-                                        final apps = Provider.of<AppsProvider>(
-                                            context,
-                                            listen: false);
+                                        // final ads = Provider.of<AdsProvider>(
+                                        //     context,
+                                        //     listen: false);
+                                        final AppsController apps = Get.find();
+
                                         // Your existing connection logic here
-                                        bool internetAvailable =
-                                            await hasInternetConnection();
-                                        if (!internetAvailable) {
-                                          _showNetworkErrorDialog();
-                                          return;
-                                        }
+                                        // bool internetAvailable =
+                                        //     await hasInternetConnection();
+                                        // if (!internetAvailable) {
+                                        //   _showNetworkErrorDialog();
+                                        //   return;
+                                        // }
 
                                         final selectedServer =
                                             serversProvider.selectedServer;
                                         if (selectedServer == null) {
-                                          Fluttertoast.showToast(
-                                            msg: "Please select a server first",
-                                            backgroundColor: Colors.red,
+                                          showLogoToast(
+                                            "Please select a server first",
+                                            color: Colors.red,
                                           );
+
                                           return;
                                         }
 
                                         // Start connection
                                         vpnValue.setRadius();
 
-                                        await ads.showInterstitial();
-
                                         _startLoading();
+
+                                        adsController.showInterstitial();
+                                        AnalyticsService.logFirebaseEvent(
+                                          'vpn_connect',
+                                        );
 
                                         try {
                                           await vpnValue.initPlatformState(
                                             selectedServer.ovpn,
                                             selectedServer.country,
-                                            apps.getDisallowedList,
+                                            apps.disallowList,
                                             selectedServer.username ?? "",
                                             selectedServer.password ?? "",
                                           );
@@ -1524,9 +1509,9 @@ class _HomeScreenState extends State<HomeScreen>
                                             _isLoading = false;
                                             _connectionCompleted = false;
                                           });
-                                          Fluttertoast.showToast(
-                                            msg: "Connection failed: $e",
-                                            backgroundColor: Colors.red,
+                                          showLogoToast(
+                                            "Connection failed: $e",
+                                            color: Colors.red,
                                           );
                                         }
                                       },
@@ -1550,21 +1535,20 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ],
               ),
-
-              if (_isCheckingConnection)
-                Container(
-                  color: Colors.black54, // semi-transparent overlay
-                  child: const Center(
-                    child: SizedBox(
-                      width: 50,
-                      height: 50,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 4,
-                        valueColor: AlwaysStoppedAnimation(Colors.white),
-                      ),
-                    ),
-                  ),
-                ),
+              // if (_isCheckingConnection)
+              //   Container(
+              //     color: Colors.black54, // semi-transparent overlay
+              //     child: const Center(
+              //       child: SizedBox(
+              //         width: 50,
+              //         height: 50,
+              //         child: CircularProgressIndicator(
+              //           strokeWidth: 4,
+              //           valueColor: AlwaysStoppedAnimation(Colors.white),
+              //         ),
+              //       ),
+              //     ),
+              //   ),
             ],
           ),
         );
@@ -1696,7 +1680,7 @@ class _HomeScreenState extends State<HomeScreen>
                             ],
                           ),
                           child: InkWell(
-                            onTap: () {
+                            onTap: () async {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -1759,19 +1743,32 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ),
         SizedBox(height: spacingMedium),
-        Consumer<AdsProvider>(
-          builder: (_, ads, __) {
-            final banner = ads.getBannerAd;
-            return banner != null
-                ? Container(
-                    alignment: Alignment.center,
-                    width: banner.size.width.toDouble(),
-                    height: banner.size.height.toDouble(),
-                    child: AdWidget(ad: banner),
-                  )
-                : SizedBox.shrink();
-          },
-        ),
+        Obx(() {
+          if (!adsController.isBannerAdLoaded.value &&
+              adsController.banner == null) {
+            return const SizedBox();
+          }
+
+          return SizedBox(
+            width: adsController.banner!.size.width.toDouble(),
+            height: adsController.banner!.size.height.toDouble(),
+            child: AdWidget(ad: adsController.banner!),
+          );
+        }),
+
+        // Consumer<AdsProvider>(
+        //   builder: (_, ads, __) {
+        //     final banner = ads.getBannerAd;
+        //     return banner != null
+        //         ? Container(
+        //             alignment: Alignment.center,
+        //             width: banner.size.width.toDouble(),
+        //             height: banner.size.height.toDouble(),
+        //             child: AdWidget(ad: banner),
+        //           )
+        //         : SizedBox.shrink();
+        //   },
+        // ),
       ],
     );
   }

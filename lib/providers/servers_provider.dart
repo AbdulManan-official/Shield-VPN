@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import '../Model/vpn_server.dart';
@@ -13,6 +15,7 @@ class ServersProvider with ChangeNotifier {
   bool _isInitialized = false;
   bool _hasPreferenceServer = false;
   bool areServersLoading = false;
+
   // bool _isFetchingServers  = false;
 
   // Keys for SharedPreferences
@@ -22,12 +25,17 @@ class ServersProvider with ChangeNotifier {
 
   // Getters
   VpnServer? get selectedServer => _selectedServer;
+
   List<VpnServer> get freeServers => _freeServers;
+
   List<VpnServer> get proServers => _proServers;
+
   bool get isInitialized => _isInitialized;
+
   bool get hasPreferenceServer => _hasPreferenceServer;
 
   int getSelectedIndex() => selectedIndex;
+
   String getSelectedTab() => selectedTab;
 
   // Initialize provider and load saved data
@@ -140,32 +148,35 @@ class ServersProvider with ChangeNotifier {
   }
 
   void setFreeServers(List<VpnServer> servers) {
-    _freeServers = servers;
+    // 🔀 Create a shuffled copy
+    final shuffledServers = List<VpnServer>.from(servers)..shuffle(Random());
 
-    if (servers.isEmpty) {
+    _freeServers = shuffledServers;
+
+    if (_freeServers.isEmpty) {
       notifyListeners();
       return;
     }
 
-    // Always try to find saved server in new list
+    // 🔁 Try to restore previously selected server
     if (_hasPreferenceServer && _selectedServer != null) {
-      bool found = false;
-      for (int i = 0; i < servers.length; i++) {
-        if (servers[i].id == _selectedServer!.id) {
-          selectedIndex = i;
-          _selectedServer = servers[i];
-          found = true;
-          break;
-        }
-      }
+      final index = _freeServers.indexWhere(
+        (s) => s.id == _selectedServer!.id,
+      );
 
-      if (!found) {
-        _selectedServer = servers.first;
+      if (index != -1) {
+        selectedIndex = index;
+        _selectedServer = _freeServers[index];
+      } else {
+        _selectedServer = _freeServers.first;
         selectedIndex = 0;
       }
+
       _saveSelectedServer();
-    } else if (!_hasPreferenceServer) {
-      _selectedServer = servers.first;
+    }
+    // 🆕 No preference → pick random (already shuffled)
+    else {
+      _selectedServer = _freeServers.first;
       selectedIndex = 0;
       selectedTab = "free";
       _saveSelectedServer();
@@ -173,6 +184,41 @@ class ServersProvider with ChangeNotifier {
 
     notifyListeners();
   }
+
+  // void setFreeServers(List<VpnServer> servers) {
+  //   _freeServers = servers;
+  //
+  //   if (servers.isEmpty) {
+  //     notifyListeners();
+  //     return;
+  //   }
+  //
+  //   // Always try to find saved server in new list
+  //   if (_hasPreferenceServer && _selectedServer != null) {
+  //     bool found = false;
+  //     for (int i = 0; i < servers.length; i++) {
+  //       if (servers[i].id == _selectedServer!.id) {
+  //         selectedIndex = i;
+  //         _selectedServer = servers[i];
+  //         found = true;
+  //         break;
+  //       }
+  //     }
+  //
+  //     if (!found) {
+  //       _selectedServer = servers.first;
+  //       selectedIndex = 0;
+  //     }
+  //     _saveSelectedServer();
+  //   } else if (!_hasPreferenceServer) {
+  //     _selectedServer = servers.first;
+  //     selectedIndex = 0;
+  //     selectedTab = "free";
+  //     _saveSelectedServer();
+  //   }
+  //
+  //   notifyListeners();
+  // }
 
   // Set pro servers - only if no preference server exists or if current is pro
   void setProServers(List<VpnServer> servers) {

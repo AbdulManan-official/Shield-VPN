@@ -336,14 +336,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.4.6"
+  in_app_review:
+    dependency: "direct main"
+    description:
+      name: in_app_review
+      sha256: ab26ac54dbd802896af78c670b265eaeab7ecddd6af4d0751e9604b60574817f
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.11"
+  in_app_review_platform_interface:
+    dependency: transitive
+    description:
+      name: in_app_review_platform_interface
+      sha256: fed2c755f2125caa9ae10495a3c163aa7fab5af3585a9c62ef4a6920c5b45f10
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.5"
   installed_apps:
     dependency: "direct main"
     description:
       name: installed_apps
-      sha256: dd2b7c531f91114cd6df447c56567593c9799ca83f057137ae719324ae0afd06
+      sha256: a111e54eb48d84db5680871c25b1d6fbe7d044baf5c262d97d9d18c1b769e196
       url: "https://pub.dev"
     source: hosted
-    version: "1.6.0"
+    version: "2.1.0"
   json_annotation:
     dependency: transitive
     description:

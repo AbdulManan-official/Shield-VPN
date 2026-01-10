@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:vpnprowithjava/View/Widgets/navbar.dart';
+import 'package:get/get.dart';
+
+import '../utils/logo_painter.dart';
+import 'Widgets/navbar.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -10,48 +13,63 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
-  late AnimationController _fadeController;
-  late Animation<double> _fadeIn;
-  late AnimationController _barController;
-  late Animation<double> _barAnimation;
+  late AnimationController _controller;
+
+  // late AnimationController _fadeController;
+  // late Animation<double> _fadeIn;
+  // late AnimationController _barController;
+  // late Animation<double> _barAnimation;
 
   @override
   void initState() {
     super.initState();
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    );
-    _fadeIn = CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut);
-    _fadeController.forward();
 
-    _barController = AnimationController(
+    _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 3400),
+      duration: const Duration(milliseconds: 2200),
     );
-    _barAnimation =
-        CurvedAnimation(parent: _barController, curve: Curves.easeInOut);
-    _barController.forward();
 
-    _barController.addStatusListener((status) {
-      if (status == AnimationStatus.completed && mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const BottomNavigator()),
-        );
+    Future.delayed(const Duration(milliseconds: 700), () {
+      if (mounted) {
+        _controller.forward();
       }
     });
+
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed && mounted) {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          Get.offAll(() => const BottomNavigator());
+        });
+      }
+    });
+
+    // _fadeController = AnimationController(
+    //   vsync: this,
+    //   duration: const Duration(seconds: 1),
+    // );
+    // _fadeIn = CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut);
+    // _fadeController.repeat();
+
+    // _barController = AnimationController(
+    //   vsync: this,
+    //   duration: const Duration(milliseconds: 2000),
+    // );
+    // _barAnimation =
+    //     CurvedAnimation(parent: _barController, curve: Curves.easeInOut);
+    // _barController.repeat();
   }
 
   @override
   void dispose() {
-    _fadeController.dispose();
-    _barController.dispose();
+    // _fadeController.dispose();
+    // _barController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    // final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     // Proportional sizes for any device
@@ -106,154 +124,168 @@ class _SplashScreenState extends State<SplashScreen>
             stops: [0.0, 0.7, 1.0],
           ),
         ),
-        child: Stack(
-          children: [
-            FadeTransition(
-              opacity: _fadeIn,
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(boxPadding),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.07),
-                        boxShadow: [
-                          BoxShadow(
-                            color: theme.colorScheme.secondary
-                                .withValues(alpha: 0.18),
-                            blurRadius: boxShadowBlur,
-                            spreadRadius: 2,
-                            offset: Offset(0, boxShadowOffset),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.security_rounded,
-                        color: theme.colorScheme.secondary,
-                        size: iconSize,
-                      ),
-                    ),
-                    SizedBox(height: verticalSpacing1),
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        RichText(
-                          text: TextSpan(
-                            children: [
-                              TextSpan(
-                                text: 'VPN',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: fontSize,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.2,
-                                  shadows: [
-                                    Shadow(
-                                      color:
-                                          Colors.black.withValues(alpha: 0.22),
-                                      blurRadius: titleUnderlineBlur,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              TextSpan(
-                                text: ' Max',
-                                style: TextStyle(
-                                  color: theme.colorScheme.secondary,
-                                  fontSize: fontSize,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.2,
-                                  shadows: [
-                                    Shadow(
-                                      color: theme.colorScheme.secondary
-                                          .withValues(alpha: 0.22),
-                                      blurRadius: titleUnderlineBlur,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Positioned(
-                          bottom: -titleUnderlineHeight,
-                          child: Container(
-                            width: titleUnderlineWidth,
-                            height: titleUnderlineHeight,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              gradient: LinearGradient(
-                                colors: [
-                                  theme.colorScheme.secondary
-                                      .withValues(alpha: 0.0),
-                                  theme.colorScheme.secondary
-                                      .withValues(alpha: 0.7),
-                                  theme.colorScheme.secondary
-                                      .withValues(alpha: 0.0),
-                                ],
-                                stops: const [0.0, 0.5, 1.0],
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: theme.colorScheme.secondary
-                                      .withValues(alpha: 0.18),
-                                  blurRadius: titleUnderlineBlur,
-                                  spreadRadius: 1,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: verticalSpacing2),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: textPaddingH),
-                      child: Text(
-                        'Ultra Responsive VPN for Secure & Fast Browsing',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: smallTextSize,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 1.05,
-                        ),
-                      ),
-                    ),
-                  ],
+        child: Center(
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return SizedBox(
+                width: Get.width * 0.8,
+                height: Get.width * 0.32,
+                child: CustomPaint(
+                  painter: VpnMaxLogoPainter(progress: _controller.value),
                 ),
-              ),
-            ),
-            // Loading bar at the bottom
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: progressBarBottom,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: progressBarPaddingH),
-                child: AnimatedBuilder(
-                  animation: _barAnimation,
-                  builder: (context, child) {
-                    return ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        minHeight: progressBarHeight,
-                        value: _barAnimation.value,
-                        backgroundColor: Colors.white.withValues(alpha: 0.08),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                            theme.colorScheme.secondary),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ],
+              );
+            },
+          ),
         ),
+        // child: Stack(
+        //   children: [
+        //     FadeTransition(
+        //       opacity: _fadeIn,
+        //       child: Center(
+        //         child: Column(
+        //           mainAxisAlignment: MainAxisAlignment.center,
+        //           children: [
+        //             Container(
+        //               padding: EdgeInsets.all(boxPadding),
+        //               decoration: BoxDecoration(
+        //                 shape: BoxShape.circle,
+        //                 color: Colors.white.withValues(alpha: 0.07),
+        //                 boxShadow: [
+        //                   BoxShadow(
+        //                     color: theme.colorScheme.secondary
+        //                         .withValues(alpha: 0.18),
+        //                     blurRadius: boxShadowBlur,
+        //                     spreadRadius: 2,
+        //                     offset: Offset(0, boxShadowOffset),
+        //                   ),
+        //                 ],
+        //               ),
+        //               child: Icon(
+        //                 Icons.security_rounded,
+        //                 color: theme.colorScheme.secondary,
+        //                 size: iconSize,
+        //               ),
+        //             ),
+        //             SizedBox(height: verticalSpacing1 - 10),
+        //             Stack(
+        //               alignment: Alignment.center,
+        //               children: [
+        //                 RichText(
+        //                   text: TextSpan(
+        //                     children: [
+        //                       TextSpan(
+        //                         text: 'VPN',
+        //                         style: TextStyle(
+        //                           color: Colors.white,
+        //                           fontSize: fontSize,
+        //                           fontWeight: FontWeight.bold,
+        //                           letterSpacing: 1.2,
+        //                           shadows: [
+        //                             Shadow(
+        //                               color:
+        //                                   Colors.black.withValues(alpha: 0.22),
+        //                               blurRadius: titleUnderlineBlur,
+        //                               offset: Offset(0, 2),
+        //                             ),
+        //                           ],
+        //                         ),
+        //                       ),
+        //                       TextSpan(
+        //                         text: ' Max',
+        //                         style: TextStyle(
+        //                           color: theme.colorScheme.secondary,
+        //                           fontSize: fontSize,
+        //                           fontWeight: FontWeight.bold,
+        //                           letterSpacing: 1.2,
+        //                           shadows: [
+        //                             Shadow(
+        //                               color: theme.colorScheme.secondary
+        //                                   .withValues(alpha: 0.22),
+        //                               blurRadius: titleUnderlineBlur,
+        //                               offset: Offset(0, 2),
+        //                             ),
+        //                           ],
+        //                         ),
+        //                       ),
+        //                     ],
+        //                   ),
+        //                 ),
+        //                 Positioned(
+        //                   bottom: -titleUnderlineHeight,
+        //                   child: Container(
+        //                     width: titleUnderlineWidth,
+        //                     height: titleUnderlineHeight,
+        //                     decoration: BoxDecoration(
+        //                       borderRadius: BorderRadius.circular(8),
+        //                       gradient: LinearGradient(
+        //                         colors: [
+        //                           theme.colorScheme.secondary
+        //                               .withValues(alpha: 0.0),
+        //                           theme.colorScheme.secondary
+        //                               .withValues(alpha: 0.7),
+        //                           theme.colorScheme.secondary
+        //                               .withValues(alpha: 0.0),
+        //                         ],
+        //                         stops: const [0.0, 0.5, 1.0],
+        //                       ),
+        //                       boxShadow: [
+        //                         BoxShadow(
+        //                           color: theme.colorScheme.secondary
+        //                               .withValues(alpha: 0.18),
+        //                           blurRadius: titleUnderlineBlur,
+        //                           spreadRadius: 1,
+        //                         ),
+        //                       ],
+        //                     ),
+        //                   ),
+        //                 ),
+        //               ],
+        //             ),
+        //             SizedBox(height: verticalSpacing2),
+        //             Padding(
+        //               padding: EdgeInsets.symmetric(horizontal: textPaddingH),
+        //               child: Text(
+        //                 'Ultra Responsive VPN for Secure & Fast Browsing',
+        //                 textAlign: TextAlign.center,
+        //                 style: TextStyle(
+        //                   color: Colors.white70,
+        //                   fontSize: smallTextSize,
+        //                   fontWeight: FontWeight.w500,
+        //                   letterSpacing: 1.05,
+        //                 ),
+        //               ),
+        //             ),
+        //           ],
+        //         ),
+        //       ),
+        //     ),
+        //     Loading bar at the bottom
+        //     Positioned(
+        //       left: 0,
+        //       right: 0,
+        //       bottom: progressBarBottom,
+        //       child: Padding(
+        //         padding: EdgeInsets.symmetric(horizontal: progressBarPaddingH),
+        //         child: AnimatedBuilder(
+        //           animation: _barAnimation,
+        //           builder: (context, child) {
+        //             return ClipRRect(
+        //               borderRadius: BorderRadius.circular(8),
+        //               child: LinearProgressIndicator(
+        //                 minHeight: progressBarHeight,
+        //                 value: _barAnimation.value,
+        //                 backgroundColor: Colors.white.withValues(alpha: 0.08),
+        //                 valueColor: AlwaysStoppedAnimation<Color>(
+        //                     theme.colorScheme.secondary),
+        //               ),
+        //             );
+        //           },
+        //         ),
+        //       ),
+        //     ),
+        //   ],
+        // ),
       ),
     );
   }
