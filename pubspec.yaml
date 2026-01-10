@@ -68,6 +68,7 @@ dependencies:
   get:
   auto_size_text: ^3.0.0
   in_app_review: ^2.0.11
+#  google_fonts: ^7.0.0
 
 
 dev_dependencies:
