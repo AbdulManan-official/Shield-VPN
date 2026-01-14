@@ -1,7 +1,7 @@
-
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+
 // --- Enhanced Animation Widgets ---
 class FloatingHorizontalLines extends StatelessWidget {
   final Animation<double> controller;

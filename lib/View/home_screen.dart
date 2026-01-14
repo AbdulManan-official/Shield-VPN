@@ -36,6 +36,11 @@ extension ResponsiveContext on BuildContext {
   bool get hasLimitedHeight => MediaQuery.of(this).size.height < 700;
 }
 
+Color _getTextColor(BuildContext context, bool connected) {
+  if (connected) return Colors.white;
+  return AppTheme.getTextPrimaryColor(context);
+}
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -120,6 +125,8 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   final AdsController adsController = Get.find();
+
+  // REPLACE THESE:
   Color _getPrimaryColor(bool connected) {
     final isDark = AppTheme.isDarkMode(context);
     return connected
@@ -482,7 +489,7 @@ class _HomeScreenState extends State<HomeScreen>
                 title: const Text(
                   "No Network Connection",
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Colors.white,  // ✅ Simple and works
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
                   ),
@@ -894,7 +901,7 @@ class _HomeScreenState extends State<HomeScreen>
         final speedBlockColor =
             connected ? _getAccentColor(connected) : _getPrimaryColor(connected);
         final blockBackgroundColor = connected
-            ? AppTheme.connected.withValues(alpha: 0.8)
+            ? AppTheme.connected.withValues(alpha: 0.15)
             : AppTheme.getCardColor(context);
         final appFilterBackgroundColor = connected
             ? _getAccentColor(connected).withValues(alpha: 0.8)
@@ -906,7 +913,6 @@ class _HomeScreenState extends State<HomeScreen>
             ?  AppTheme.connected
             : AppTheme.getCardColor(context) ;
         // final textColor = connected ? Colors.white : Colors.white70;
-        final textColor = Colors.white;
 
         return Scaffold(
           body: Stack(
@@ -914,22 +920,17 @@ class _HomeScreenState extends State<HomeScreen>
               // Gradient Background
               Container(
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
+                  gradient: connected
+                      ? LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: connected
-                        ? [
-                      AppTheme.connected,
+                    colors: [
                       AppTheme.connected,
                       AppTheme.connected.withValues(alpha: 0.8),
-                      AppTheme.bgDark
-                          ]
-                        : [
-                      AppTheme.bgDark,
-                      AppTheme.bgDark.withValues(alpha: 0.9),
-                      AppTheme.bgDark
-                          ],
-                  ),
+                      AppTheme.getBackgroundColor(context),
+                    ],
+                  )
+                      : AppTheme.getBackgroundGradient(context),
                 ),
               ),
               // Main content with proper flex layout
@@ -951,10 +952,9 @@ class _HomeScreenState extends State<HomeScreen>
                                     TextSpan(
                                       text: "SHIELD",
                                       style: GoogleFonts.montserrat(
-                                        color: Colors.white,
+                                        color: AppTheme.getTextPrimaryColor(context),  // ✅ Theme-aware
                                         fontSize: titleFontSize - 1,
                                         fontWeight: FontWeight.bold,
-                                        // letterSpacing: 1.2,
                                       ),
                                     ),
                                     TextSpan(
@@ -965,7 +965,6 @@ class _HomeScreenState extends State<HomeScreen>
                                             : _getPrimaryColor(connected),
                                         fontSize: titleFontSize - 1,
                                         fontWeight: FontWeight.bold,
-                                        // letterSpacing: 1.2,
                                       ),
                                     ),
                                   ],
@@ -1016,13 +1015,16 @@ class _HomeScreenState extends State<HomeScreen>
                               color: blockBackgroundColor,
                               borderRadius: BorderRadius.circular(borderRadius),
                               border: Border.all(
-                                color: speedBlockColor.withValues(alpha: 0.2),
+                                color: connected
+                                    ? AppTheme.connected.withValues(alpha: 0.3)
+                                    : AppTheme.borderLight.withValues(alpha: 0.3),
                                 width: 1.2,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color:
-                                      speedBlockColor.withValues(alpha: 0.15),
+                                  color: connected
+                                      ? AppTheme.connected.withValues(alpha: 0.3)
+                                      : AppTheme.shadowLight,
                                   blurRadius: borderRadius,
                                   spreadRadius: 2,
                                 ),
@@ -1047,7 +1049,7 @@ class _HomeScreenState extends State<HomeScreen>
                                         Text(
                                           "DOWNLOAD",
                                           style: GoogleFonts.montserrat(
-                                            color: textColor,
+                                            color: connected ? Colors.white : AppTheme.getTextPrimaryColor(context),  // ✅
                                             fontWeight: FontWeight.w800,
                                             fontSize: speedLabelFontSize - 1,
                                           ),
@@ -1063,7 +1065,7 @@ class _HomeScreenState extends State<HomeScreen>
                                                 )
                                               : "0 KB",
                                           style: GoogleFonts.montserrat(
-                                            color: Colors.white,
+                                            color: connected ? Colors.white : AppTheme.getTextPrimaryColor(context),  // ✅
                                             fontWeight: FontWeight.bold,
                                             fontSize: speedValueFontSize + 1.5,
                                           ),
@@ -1087,7 +1089,6 @@ class _HomeScreenState extends State<HomeScreen>
                                       Icons.arrow_upward,
                                       color: connected
                                           ? _getAccentColor(connected)
-
                                           : _getPrimaryColor(connected),
                                       size: speedLabelFontSize + 10,
                                     ),
@@ -1097,7 +1098,7 @@ class _HomeScreenState extends State<HomeScreen>
                                         Text(
                                           "UPLOAD",
                                           style: GoogleFonts.montserrat(
-                                            color: textColor,
+                                            color: connected ? Colors.white : AppTheme.getTextPrimaryColor(context),  // ✅
                                             fontWeight: FontWeight.w800,
                                             fontSize: speedLabelFontSize,
                                           ),
@@ -1106,15 +1107,11 @@ class _HomeScreenState extends State<HomeScreen>
                                         Text(
                                           vpnValue.stage == VPNStage.connected
                                               ? formatSpeed(
-                                                  double.tryParse(vpnValue
-                                                              .status
-                                                              ?.byteOut ??
-                                                          "0") ??
-                                                      0,
-                                                )
+                                            double.tryParse(vpnValue.status?.byteOut ?? "0") ?? 0,
+                                          )
                                               : "0 KB",
                                           style: GoogleFonts.montserrat(
-                                            color: Colors.white,
+                                            color: connected ? Colors.white : AppTheme.getTextPrimaryColor(context),  // ✅
                                             fontWeight: FontWeight.bold,
                                             fontSize: speedValueFontSize + 1.5,
                                           ),
@@ -1279,11 +1276,9 @@ class _HomeScreenState extends State<HomeScreen>
                                           SizedBox(width: sidePadding * 0.75),
                                           Expanded(
                                             child: Text(
-                                              serversProvider.selectedServer
-                                                      ?.country ??
-                                                  "Select your country",
+                                              serversProvider.selectedServer?.country ?? "Select your country",
                                               style: TextStyle(
-                                                color: Colors.white,
+                                                color: connected ? Colors.white : AppTheme.getTextPrimaryColor(context),  // ✅
                                                 fontSize: serverNameFontSize,
                                                 fontWeight: FontWeight.w600,
                                               ),
@@ -1556,16 +1551,18 @@ class _HomeScreenState extends State<HomeScreen>
                                 "Premium VPN - 50% OFF",
                                 maxLines: 1,
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: connected ? Colors.white : AppTheme.getTextPrimaryColor(context),  // ✅
                                   fontSize: bannerTitleFontSize,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               AutoSizeText(
-                                "Upgrade now for no limits",
+                                "Upgrade now for no limit",
                                 maxLines: 2,
                                 style: TextStyle(
-                                  color: Colors.white60,
+                                  color: connected
+                                      ? Colors.white70
+                                      : AppTheme.getTextSecondaryColor(context),  // ✅
                                   fontSize: bannerSubtitleFontSize,
                                   fontWeight: FontWeight.w500,
                                 ),

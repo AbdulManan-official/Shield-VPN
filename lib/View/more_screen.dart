@@ -11,6 +11,7 @@ import 'package:vpnprowithjava/View/subscription_manager.dart';
 
 import '../providers/ads_controller.dart';
 import '../utils/custom_toast.dart';
+import '../utils/app_theme.dart'; // Import your theme file
 import 'allowed_app_screen.dart' show AllowedAppsScreen;
 
 // Extension for responsive design
@@ -56,7 +57,7 @@ extension ResponsiveExtension on BuildContext {
     return GoogleFonts.poppins(
       fontSize: screenSize >= 370000 ? fontSize : fontSize + 1,
       fontWeight: fontWeight ?? FontWeight.normal,
-      color: color ?? Colors.white,
+      color: color ?? Theme.of(this).textTheme.bodyLarge?.color,
       letterSpacing: letterSpacing,
     );
   }
@@ -70,18 +71,7 @@ class MoreScreen extends StatefulWidget {
 }
 
 class _MoreScreenState extends State<MoreScreen> {
-  // String? _uuid;
-
-  // late SubscriptionManager subscriptionManager;
   final SubscriptionController subscriptionManager = Get.find();
-
-  // Color scheme constants
-  static const Color darkBg = Color(0xFF0A0E27);
-  static const Color cardBg = Color(0xFF1A1A2E);
-  static const Color primaryPurple = Color(0xFF6C63FF);
-  static const Color lightPurple = Color(0xFF9B93FF);
-  static const Color warmGold = Color(0xFFFFD700);
-  static const Color softGold = Color(0xFFFFA500);
 
   Future<void> _launchEmailFeedback() async {
     final Uri params = Uri(
@@ -99,9 +89,7 @@ class _MoreScreenState extends State<MoreScreen> {
     }
   }
 
-  Future<void> _loadUuid() async {
-
-  }
+  Future<void> _loadUuid() async {}
 
   void _showSubscriptionDialog(BuildContext context) {
     final hasSubscription = subscriptionManager.isSubscribed.value;
@@ -126,8 +114,10 @@ class _MoreScreenState extends State<MoreScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        final isDark = AppTheme.isDarkMode(context);
+
         return AlertDialog(
-          backgroundColor: cardBg,
+          backgroundColor: AppTheme.getCardColor(context),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -135,14 +125,14 @@ class _MoreScreenState extends State<MoreScreen> {
             children: [
               const Icon(
                 Icons.check_circle,
-                color: Colors.green,
+                color: AppTheme.success,
                 size: 24,
               ),
               const SizedBox(width: 8),
               Text(
                 'Premium Active',
                 style: GoogleFonts.poppins(
-                  color: Colors.white,
+                  color: AppTheme.getTextPrimaryColor(context),
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
@@ -156,7 +146,7 @@ class _MoreScreenState extends State<MoreScreen> {
               Text(
                 'You have an active premium subscription!',
                 style: GoogleFonts.poppins(
-                  color: Colors.white70,
+                  color: AppTheme.getTextSecondaryColor(context),
                   fontSize: 14,
                 ),
               ),
@@ -165,7 +155,7 @@ class _MoreScreenState extends State<MoreScreen> {
                 Text(
                   'Type: ${subscriptionType.toUpperCase()}',
                   style: GoogleFonts.poppins(
-                    color: Colors.green,
+                    color: AppTheme.success,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -176,7 +166,7 @@ class _MoreScreenState extends State<MoreScreen> {
                 Text(
                   'Since: ${DateTime.parse(subscriptionDate).toLocal().toString().split(' ')[0]}',
                   style: GoogleFonts.poppins(
-                    color: Colors.white60,
+                    color: AppTheme.getTextSecondaryColor(context),
                     fontSize: 12,
                   ),
                 ),
@@ -189,7 +179,7 @@ class _MoreScreenState extends State<MoreScreen> {
               child: Text(
                 'OK',
                 style: GoogleFonts.poppins(
-                  color: Colors.green,
+                  color: AppTheme.success,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -200,7 +190,6 @@ class _MoreScreenState extends State<MoreScreen> {
     );
   }
 
-
   final AdsController adsController = Get.find();
 
   @override
@@ -208,7 +197,6 @@ class _MoreScreenState extends State<MoreScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadUuid();
-
     });
   }
 
@@ -220,6 +208,8 @@ class _MoreScreenState extends State<MoreScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDarkMode(context);
+
     return GestureDetector(
       onTap: () {
         FocusScopeNode currentFocus = FocusScope.of(context);
@@ -229,9 +219,9 @@ class _MoreScreenState extends State<MoreScreen> {
       },
       child: SafeArea(
         child: Scaffold(
-          backgroundColor: darkBg,
+          backgroundColor: AppTheme.getBackgroundColor(context),
           appBar: AppBar(
-            backgroundColor: darkBg,
+            backgroundColor: AppTheme.getBackgroundColor(context),
             elevation: 0,
             centerTitle: true,
             title: Text(
@@ -239,23 +229,17 @@ class _MoreScreenState extends State<MoreScreen> {
               style: GoogleFonts.poppins(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: AppTheme.getTextPrimaryColor(context),
               ),
             ),
           ),
           body: SingleChildScrollView(
-
-          child: Column(
+            child: Column(
               children: [
                 Container(
-                  padding:
-                      context.responsivePadding(horizontal: 20, vertical: 28),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [darkBg, cardBg],
-                    ),
+                  padding: context.responsivePadding(horizontal: 20, vertical: 28),
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.getBackgroundGradient(context),
                   ),
                   child: Column(
                     children: [
@@ -274,22 +258,21 @@ class _MoreScreenState extends State<MoreScreen> {
                             decoration: BoxDecoration(
                               gradient: subscriptionManager.isSubscribed.value
                                   ? LinearGradient(
-                                      colors: [
-                                        Colors.grey[700]!,
-                                        Colors.grey[600]!
-                                      ],
-                                    )
-                                  : const LinearGradient(
-                                      colors: [warmGold, softGold]),
+                                colors: [
+                                  AppTheme.textSecondaryLight,
+                                  AppTheme.textSecondaryDark
+                                ],
+                              )
+                                  : AppTheme.premiumGradient,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
                               subscriptionManager.isSubscribed.value
                                   ? 'ACTIVE'
                                   : 'UNLOCK',
-                              style: const TextStyle(
+                              style: GoogleFonts.poppins(
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF1A1A2E),
+                                color: isDark ? AppTheme.textPrimaryDark : AppTheme.textPrimaryLight,
                                 fontSize: 12,
                               ),
                             ),
@@ -304,7 +287,7 @@ class _MoreScreenState extends State<MoreScreen> {
                         label: "App Filter",
                         trailing: Icon(
                           Icons.chevron_right,
-                          color: lightPurple,
+                          color: AppTheme.getPrimaryColor(context),
                           size: context.responsiveIconSize(20),
                         ),
                         onTap: () {
@@ -320,18 +303,16 @@ class _MoreScreenState extends State<MoreScreen> {
                         label: "Share App",
                         trailing: Icon(
                           Icons.chevron_right,
-                          color: lightPurple,
+                          color: AppTheme.getPrimaryColor(context),
                           size: context.responsiveIconSize(20),
                         ),
                         onTap: () async {
                           await SharePlus.instance.share(ShareParams(
                               text:
-                                  'Check out VPN Max for fast and secure browsing! https://play.google.com/store/apps/details?id=com.technosofts.vpnmax'));
+                              'Check out VPN Max for fast and secure browsing! https://play.google.com/store/apps/details?id=com.technosofts.vpnmax'));
                         },
                       ),
                       SizedBox(height: context.responsiveSpacing(16)),
-
-
 
                       // Rate App
                       _MoreTile(
@@ -339,7 +320,7 @@ class _MoreScreenState extends State<MoreScreen> {
                         label: "Rate this app",
                         trailing: Icon(
                           Icons.chevron_right,
-                          color: lightPurple,
+                          color: AppTheme.getPrimaryColor(context),
                           size: context.responsiveIconSize(20),
                         ),
                         onTap: () async {
@@ -356,7 +337,7 @@ class _MoreScreenState extends State<MoreScreen> {
                         label: "Feedback",
                         trailing: Icon(
                           Icons.chevron_right,
-                          color: lightPurple,
+                          color: AppTheme.getPrimaryColor(context),
                           size: context.responsiveIconSize(20),
                         ),
                         onTap: _launchEmailFeedback,
@@ -370,7 +351,7 @@ class _MoreScreenState extends State<MoreScreen> {
                         label: "Check for Updates",
                         trailing: Icon(
                           Icons.chevron_right,
-                          color: lightPurple,
+                          color: AppTheme.getPrimaryColor(context),
                           size: context.responsiveIconSize(20),
                         ),
                         onTap: () async {
@@ -380,13 +361,11 @@ class _MoreScreenState extends State<MoreScreen> {
                       ),
 
                       SizedBox(height: context.responsiveSpacing(16)),
-
-
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Obx(() {
                   if (!adsController.isBannerAd2Loaded.value &&
                       adsController.banner2 == null) {
@@ -399,7 +378,6 @@ class _MoreScreenState extends State<MoreScreen> {
                     child: AdWidget(ad: adsController.banner2!),
                   );
                 }),
-
               ],
             ),
           ),
@@ -425,8 +403,10 @@ class _MoreTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDarkMode(context);
+
     return Material(
-      color: _MoreScreenState.cardBg,
+      color: AppTheme.getCardColor(context),
       borderRadius: BorderRadius.circular(
         context.responsiveBorderRadius(16),
       ),
@@ -436,18 +416,21 @@ class _MoreTile extends StatelessWidget {
         ),
         onTap: onTap,
         child: Container(
-          // height: 55,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(
               context.responsiveBorderRadius(16),
             ),
             border: Border.all(
-              color: _MoreScreenState.lightPurple.withValues(alpha: 0.2),
+              color: isDark
+                  ? AppTheme.borderDark
+                  : AppTheme.borderLight,
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: _MoreScreenState.primaryPurple.withValues(alpha: 0.1),
+                color: isDark
+                    ? AppTheme.shadowDark
+                    : AppTheme.shadowLight,
                 blurRadius: 8,
                 spreadRadius: 1,
               ),
@@ -462,14 +445,14 @@ class _MoreTile extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(context.responsiveSpacing(8)),
                 decoration: BoxDecoration(
-                  color: _MoreScreenState.primaryPurple.withValues(alpha: 0.2),
+                  gradient: AppTheme.primaryGradient,
                   borderRadius: BorderRadius.circular(
                     context.responsiveBorderRadius(10),
                   ),
                 ),
                 child: Icon(
                   icon,
-                  color: _MoreScreenState.lightPurple,
+                  color: Colors.white,
                   size: context.responsiveIconSize(20),
                 ),
               ),
@@ -481,7 +464,7 @@ class _MoreTile extends StatelessWidget {
                   style: context.responsiveTextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: AppTheme.getTextPrimaryColor(context),
                   ),
                 ),
               ),

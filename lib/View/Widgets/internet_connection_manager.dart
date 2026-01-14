@@ -3,12 +3,13 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:vpnprowithjava/View/Widgets/recommended_server_screen.dart';
+import 'package:vpnprowithjava/utils/custom_toast.dart';
+import 'package:vpnprowithjava/utils/app_theme.dart'; // ✅ IMPORTED THEME!
 
 class InternetConnectionManager {
   static final Connectivity _connectivity = Connectivity();
   static StreamSubscription<List<ConnectivityResult>>?
-      _connectivitySubscription;
+  _connectivitySubscription;
 
   static bool _isConnected = true;
   static Function(bool)? _onConnectionChanged;
@@ -18,8 +19,8 @@ class InternetConnectionManager {
 
     _connectivitySubscription =
         Connectivity().onConnectivityChanged.listen((connectivityResult) {
-      _checkInternetConnection();
-    });
+          _checkInternetConnection();
+        });
 
     // Initial check
     _checkInternetConnection();
@@ -58,9 +59,17 @@ class InternetConnectionManager {
       _onConnectionChanged?.call(isConnected);
 
       if (!isConnected) {
-        ToastHelper.showError('No internet connection');
+        // ✅ USING AppTheme.error - RED COLOR!
+        showLogoToast(
+          'No internet connection',
+          color: AppTheme.error,
+        );
       } else {
-        ToastHelper.showSuccess('Internet connection restored');
+        // ✅ USING AppTheme.success - GREEN COLOR!
+        showLogoToast(
+          'Internet connection restored',
+          color: AppTheme.success,
+        );
       }
     }
   }

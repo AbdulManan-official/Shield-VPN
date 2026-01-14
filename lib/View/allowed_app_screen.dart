@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../Model/application_model.dart';
 import '../providers/apps_provider.dart';
-import '../utils/colors.dart';
+import '../utils/app_theme.dart'; // ✅ IMPORTED THEME
 
 
 class AllowedAppsScreen extends StatelessWidget {
@@ -17,7 +17,7 @@ class AllowedAppsScreen extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: UIColors.darkBg,
+        backgroundColor: AppTheme.getBackgroundColor(context),
         appBar: AppBar(
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.only(
@@ -25,20 +25,26 @@ class AllowedAppsScreen extends StatelessWidget {
               bottomLeft: Radius.circular(7),
             ),
           ),
-          backgroundColor: UIColors.cardBg,
+          backgroundColor: AppTheme.getCardColor(context),
           elevation: 0,
           leading: IconButton(
             onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+            icon: Icon(
+              Icons.arrow_back_ios,
+              color: AppTheme.getTextPrimaryColor(context),
+            ),
           ),
           title: Text(
             'App Filter',
             style: GoogleFonts.poppins(
               fontWeight: FontWeight.w800,
-              color: Colors.white,
+              color: AppTheme.getTextPrimaryColor(context),
             ),
           ),
           bottom: TabBar(
+            indicatorColor: AppTheme.getPrimaryColor(context),
+            labelColor: AppTheme.getPrimaryColor(context),
+            unselectedLabelColor: AppTheme.getTextSecondaryColor(context),
             tabs: [
               Tab(
                 child: Text(
@@ -61,14 +67,18 @@ class AllowedAppsScreen extends StatelessWidget {
         ),
         body: Obx(() {
           if (appsController.isLoading.value) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(
+              child: CircularProgressIndicator(
+                color: AppTheme.getPrimaryColor(context),
+              ),
+            );
           }
 
           return TabBarView(
             physics: const BouncingScrollPhysics(),
             children: [
-              _appsList(appsController.installedApps),
-              _appsList(appsController.systemApps),
+              _appsList(context, appsController.installedApps),
+              _appsList(context, appsController.systemApps),
             ],
           );
         }),
@@ -76,19 +86,21 @@ class AllowedAppsScreen extends StatelessWidget {
     );
   }
 
-  Widget _appsList(List<ApplicationModel> apps) {
+  Widget _appsList(BuildContext context, List<ApplicationModel> apps) {
     if (apps.isEmpty) {
       return Center(
         child: Text(
           'No apps found',
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.w600,
+            color: AppTheme.getTextPrimaryColor(context),
           ),
         ),
       );
     }
 
     return RefreshIndicator(
+      color: AppTheme.getPrimaryColor(context),
       onRefresh: appsController.loadApps,
       child: ListView.builder(
         itemCount: apps.length,
@@ -96,20 +108,24 @@ class AllowedAppsScreen extends StatelessWidget {
         itemBuilder: (_, index) {
           final app = apps[index];
           return Container(
-            margin: EdgeInsets.symmetric(
+            margin: const EdgeInsets.symmetric(
               vertical: 5,
               horizontal: 10,
             ),
             decoration: BoxDecoration(
-              color: UIColors.cardBg,
+              color: AppTheme.getCardColor(context),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: UIColors.lightPurple.withValues(alpha: 0.2),
+                color: AppTheme.isDarkMode(context)
+                    ? AppTheme.borderDark
+                    : AppTheme.borderLight,
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: UIColors.primaryPurple.withValues(alpha: 0.1),
+                  color: AppTheme.isDarkMode(context)
+                      ? AppTheme.shadowDark
+                      : AppTheme.shadowLight,
                   blurRadius: 6,
                   spreadRadius: 1,
                   offset: const Offset(0, 2),
@@ -119,17 +135,24 @@ class AllowedAppsScreen extends StatelessWidget {
             child: ListTile(
               leading: app.app.icon != null
                   ? Image.memory(app.app.icon!, width: 35)
-                  : const Icon(Icons.apps),
+                  : Icon(
+                Icons.apps,
+                color: AppTheme.getPrimaryColor(context),
+              ),
               title: Text(
                 app.app.name,
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.w500,
+                  color: AppTheme.getTextPrimaryColor(context),
                 ),
               ),
               trailing: Switch(
-                activeThumbColor: UIColors.connectGreen,
-                inactiveThumbColor: Colors.grey.shade600,
-                inactiveTrackColor: Colors.grey.shade800,
+                activeColor: AppTheme.success,
+                activeTrackColor: AppTheme.success.withValues(alpha: 0.5),
+                inactiveThumbColor: AppTheme.getTextSecondaryColor(context),
+                inactiveTrackColor: AppTheme.isDarkMode(context)
+                    ? AppTheme.surfaceDark
+                    : AppTheme.surfaceLight,
                 value: app.isSelected,
                 onChanged: (value) {
                   appsController.updateAppsList(app.app.packageName, value);
@@ -142,4 +165,3 @@ class AllowedAppsScreen extends StatelessWidget {
     );
   }
 }
-

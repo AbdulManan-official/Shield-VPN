@@ -232,45 +232,6 @@ class _PremiumAccessScreenState extends State<PremiumAccessScreen>
     _isPurchaseInProgress = false;
   }
 
-  // void _handlePurchaseUpdates(List<PurchaseDetails> purchaseDetailsList) async {
-  //   for (var purchaseDetails in purchaseDetailsList) {
-  //     if (purchaseDetails.status == PurchaseStatus.purchased) {
-  //       // Determine subscription type based on product ID
-  //       String subscriptionType = 'premium';
-  //       if (purchaseDetails.productID == SubscriptionManager.monthlyProductId) {
-  //         subscriptionType = 'monthly';
-  //       } else if (purchaseDetails.productID ==
-  //           SubscriptionManager.yearlyProductId) {
-  //         subscriptionType = 'yearly';
-  //       } else if (purchaseDetails.productID ==
-  //           SubscriptionManager.oneTimeProductId) {
-  //         subscriptionType = 'lifetime';
-  //       }
-  //
-  //       // Update subscription status
-  //       await _subscriptionManager.setSubscriptionStatus(
-  //         isSubscribed: true,
-  //         subscriptionType: subscriptionType,
-  //       );
-  //
-  //       if (!mounted) return;
-  //
-  //       _showSuccessDialog();
-  //
-  //       _navigator.pop();
-  //     } else if (purchaseDetails.status == PurchaseStatus.error) {
-  //       _showErrorDialog('Purchase failed. Please try again.');
-  //     }
-  //
-  //     // Complete the purchase
-  //     if (purchaseDetails.pendingCompletePurchase) {
-  //       await _inAppPurchase.completePurchase(purchaseDetails);
-  //     }
-  //   }
-  //   // Allow new taps after handling purchase
-  //   _isPurchaseInProgress = false;
-  // }
-
   void _buySubscription(ProductDetails product) {
     if (_isPurchaseInProgress) return; // Prevent double tap
     _isPurchaseInProgress = true;
@@ -561,15 +522,7 @@ class _PremiumAccessScreenState extends State<PremiumAccessScreen>
   @override
   Widget build(BuildContext context) {
     final hasSubscription = sub.isSubscribed.value;
-    // final sub = context.watch<SubscriptionManager>();
-    // if (sub.isSubscribed && !_handledSuccess) {
-    //   _handledSuccess = true;
-    //   WidgetsBinding.instance.addPostFrameCallback((_) {
-    //     if (!mounted) return;
-    //     _navigator.pop();
-    //     _showSuccessDialog();
-    //   });
-    // }
+
     if (_isLoading) {
       return Scaffold(
         body: Container(
@@ -680,54 +633,17 @@ class _PremiumAccessScreenState extends State<PremiumAccessScreen>
   }
 
   Widget _buildEnhancedHeader(BuildContext context, bool hasSubscription) {
-    // final screenWidth = MediaQuery.of(context).size.width;
-    // final iconSize = (screenWidth * 0.15).clamp(40.0, 80.0);
+
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       child: Column(
         children: [
-          // AnimatedBuilder(
-          //   animation: _pulseController,
-          //   builder: (context, child) {
-          //     return Transform.scale(
-          //       scale: _pulseAnimation.value,
-          //       child: Container(
-          //         width: iconSize,
-          //         height: iconSize,
-          //         decoration: BoxDecoration(
-          //           gradient: LinearGradient(
-          //             colors: hasSubscription
-          //                 ? [connectGreen, accentTeal]
-          //                 : [warmGold, softGold, accentTeal],
-          //             begin: Alignment.topLeft,
-          //             end: Alignment.bottomRight,
-          //           ),
-          //           borderRadius: BorderRadius.circular(iconSize * 0.3),
-          //           boxShadow: [
-          //             BoxShadow(
-          //               color: (hasSubscription ? connectGreen : warmGold)
-          //                   .withValues(alpha: 0.4),
-          //               blurRadius: iconSize * 0.18,
-          //               spreadRadius: iconSize * 0.03,
-          //             ),
-          //           ],
-          //         ),
-          //         child: Icon(
-          //           hasSubscription ? Icons.check_circle : Icons.diamond,
-          //           color: darkBg,
-          //           size: iconSize * 0.5,
-          //         ),
-          //       ),
-          //     );
-          //   },
-          // ),
+
           const SizedBox(height: 15),
           ShaderMask(
             shaderCallback: (bounds) => LinearGradient(
-              // colors: hasSubscription
-              //     ? [connectGreen, accentTeal]
-              //     : [warmGold, accentTeal, connectGreen],
+
               colors: [accentTeal,primaryPurple],
             ).createShader(bounds),
             child: Text(
@@ -1170,21 +1086,13 @@ class _PremiumAccessScreenState extends State<PremiumAccessScreen>
         "title": "Global Servers",
         "subtitle": "Worldwide locations",
       },
-      // {
-      //   "icon": "📱",
-      //   "title": "Multi-Device",
-      //   "subtitle": "Connect up to 10 devices",
-      // },
+
       {
         "icon": "🛡️",
         "title": "Ad Blocker",
         "subtitle": "Block ads and malware",
       },
-      // {
-      //   "icon": "🔄",
-      //   "title": "No Logs Policy",
-      //   "subtitle": "Complete privacy guaranteed",
-      // },
+
     ];
 
     return Container(

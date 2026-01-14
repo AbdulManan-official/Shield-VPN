@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 
 import '../utils/logo_painter.dart';
 import '../utils/app_theme.dart';
-import 'Widgets/navbar.dart';
 import 'home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
