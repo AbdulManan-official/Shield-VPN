@@ -11,6 +11,7 @@ import 'package:vpnprowithjava/View/subscription_manager.dart';
 
 import '../providers/ads_controller.dart';
 import '../utils/custom_toast.dart';
+import 'allowed_app_screen.dart' show AllowedAppsScreen;
 
 // Extension for responsive design
 extension ResponsiveExtension on BuildContext {
@@ -99,18 +100,7 @@ class _MoreScreenState extends State<MoreScreen> {
   }
 
   Future<void> _loadUuid() async {
-    // String? storedUuid = Prefs.getString('uuid');
-    // if (storedUuid == null) {
-    //   final uuid = const Uuid().v4();
-    //   await Prefs.setString('uuid', uuid);
-    //   setState(() {
-    //     _uuid = uuid;
-    //   });
-    // } else {
-    //   setState(() {
-    //     _uuid = storedUuid;
-    //   });
-    // }
+
   }
 
   void _showSubscriptionDialog(BuildContext context) {
@@ -210,66 +200,7 @@ class _MoreScreenState extends State<MoreScreen> {
     );
   }
 
-  // Future<void> _checkForUpdates() async {
-  //   try {
-  //     final packageInfo = await PackageInfo.fromPlatform();
-  //     final currentVersion = packageInfo.version.trim();
-  //     const playStoreUrl =
-  //         'https://play.google.com/store/apps/details?id=com.technosofts.vpnmax';
-  //
-  //     final response = await http.get(Uri.parse(playStoreUrl));
-  //     if (response.statusCode == 200) {
-  //       final html = response.body;
-  //       final versionRegExp =
-  //           RegExp(r'Current Version.*?>([0-9.]+)<', dotAll: true);
-  //       final match = versionRegExp.firstMatch(html);
-  //
-  //       if (match != null) {
-  //         final storeVersion = match.group(1)?.trim() ?? '';
-  //         if (storeVersion.isNotEmpty && storeVersion != currentVersion) {
-  //           Fluttertoast.showToast(
-  //             msg: "Update available! ($storeVersion)",
-  //             backgroundColor: Colors.grey[800],
-  //             textColor: Colors.white,
-  //           );
-  //         } else {
-  //           Fluttertoast.showToast(
-  //             msg: "App is up to date!",
-  //             backgroundColor: Colors.grey[800],
-  //             textColor: Colors.white,
-  //           );
-  //         }
-  //       } else {
-  //         Fluttertoast.showToast(
-  //           msg: "Could not check version.",
-  //           backgroundColor: Colors.grey[800],
-  //           textColor: Colors.white,
-  //         );
-  //       }
-  //     } else {
-  //       Fluttertoast.showToast(
-  //         msg: "Failed to reach Play Store.",
-  //         backgroundColor: Colors.grey[800],
-  //         textColor: Colors.white,
-  //       );
-  //     }
-  //   } catch (e) {
-  //     Fluttertoast.showToast(
-  //       msg: "Error: ${e.toString()}",
-  //       backgroundColor: Colors.grey[800],
-  //       textColor: Colors.white,
-  //     );
-  //   }
-  // }
-  // late AdsProvider _adsProvider;
-  //
-  // @override
-  // void didChangeDependencies() {
-  //   super.didChangeDependencies();
-  //   _adsProvider = Provider.of<AdsProvider>(context, listen: false);
-  //   // subscriptionManager =
-  //   //     Provider.of<SubscriptionManager>(context, listen: false);
-  // }
+
   final AdsController adsController = Get.find();
 
   @override
@@ -277,14 +208,13 @@ class _MoreScreenState extends State<MoreScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadUuid();
-      // _adsProvider.loadBanner2();
+
     });
   }
 
   @override
   void dispose() {
     adsController.disposeBanner2();
-    // _adsProvider.disposeAll();
     super.dispose();
   }
 
@@ -300,8 +230,22 @@ class _MoreScreenState extends State<MoreScreen> {
       child: SafeArea(
         child: Scaffold(
           backgroundColor: darkBg,
+          appBar: AppBar(
+            backgroundColor: darkBg,
+            elevation: 0,
+            centerTitle: true,
+            title: Text(
+              'Settings',
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
           body: SingleChildScrollView(
-            child: Column(
+
+          child: Column(
               children: [
                 Container(
                   padding:
@@ -355,6 +299,20 @@ class _MoreScreenState extends State<MoreScreen> {
                       }),
 
                       SizedBox(height: context.responsiveSpacing(16)),
+                      _MoreTile(
+                        icon: Icons.apps,
+                        label: "App Filter",
+                        trailing: Icon(
+                          Icons.chevron_right,
+                          color: lightPurple,
+                          size: context.responsiveIconSize(20),
+                        ),
+                        onTap: () {
+                          Get.to(() => AllowedAppsScreen());
+                        },
+                      ),
+
+                      SizedBox(height: context.responsiveSpacing(16)),
 
                       // Share App
                       _MoreTile(
@@ -371,8 +329,9 @@ class _MoreScreenState extends State<MoreScreen> {
                                   'Check out VPN Max for fast and secure browsing! https://play.google.com/store/apps/details?id=com.technosofts.vpnmax'));
                         },
                       ),
-
                       SizedBox(height: context.responsiveSpacing(16)),
+
+
 
                       // Rate App
                       _MoreTile(
@@ -422,100 +381,7 @@ class _MoreScreenState extends State<MoreScreen> {
 
                       SizedBox(height: context.responsiveSpacing(16)),
 
-                      // UUID Card
-                      // Container(
-                      //   width: double.infinity,
-                      //   decoration: BoxDecoration(
-                      //     color: cardBg,
-                      //     borderRadius: BorderRadius.circular(
-                      //       context.responsiveBorderRadius(16),
-                      //     ),
-                      //     border: Border.all(
-                      //       color: lightPurple.withValues(alpha: 0.2),
-                      //     ),
-                      //     boxShadow: [
-                      //       BoxShadow(
-                      //         color: primaryPurple.withValues(alpha: 0.1),
-                      //         blurRadius: 12,
-                      //         spreadRadius: 2,
-                      //       ),
-                      //     ],
-                      //   ),
-                      //   padding: const EdgeInsets.all(15),
-                      //   child: Row(
-                      //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      //     children: [
-                      //       Expanded(
-                      //         child: Column(
-                      //           crossAxisAlignment: CrossAxisAlignment.start,
-                      //           children: [
-                      //             Text(
-                      //               "Device UUID",
-                      //               style: context.responsiveTextStyle(
-                      //                 fontSize: 16,
-                      //                 fontWeight: FontWeight.bold,
-                      //                 color: Colors.white,
-                      //               ),
-                      //             ),
-                      //             SizedBox(
-                      //                 height: context.responsiveSpacing(4)),
-                      //             Text(
-                      //               _uuid ?? 'Loading UUID...',
-                      //               style: context.responsiveTextStyle(
-                      //                 fontSize: 12.5,
-                      //                 color: lightPurple,
-                      //                 letterSpacing: 0.5,
-                      //               ),
-                      //             ),
-                      //           ],
-                      //         ),
-                      //       ),
-                      //       SizedBox(width: context.responsiveSpacing(12)),
-                      //       GestureDetector(
-                      //         onTap: () async {
-                      //           if (_uuid != null) {
-                      //             await Clipboard.setData(
-                      //                 ClipboardData(text: _uuid!));
-                      //             Fluttertoast.showToast(
-                      //               msg: "UUID copied!",
-                      //               backgroundColor: Colors.grey[800],
-                      //               textColor: Colors.white,
-                      //             );
-                      //           }
-                      //         },
-                      //         child: Container(
-                      //           padding: context.responsivePadding(
-                      //             horizontal: 16,
-                      //             vertical: 8,
-                      //           ),
-                      //           decoration: BoxDecoration(
-                      //             color: UIColors.primaryPurple,
-                      //             borderRadius: BorderRadius.circular(
-                      //               context.responsiveBorderRadius(10),
-                      //             ),
-                      //             boxShadow: [
-                      //               BoxShadow(
-                      //                 color: UIColors.primaryPurple
-                      //                     .withValues(alpha: 0.3),
-                      //                 blurRadius: 8,
-                      //                 spreadRadius: 1,
-                      //               ),
-                      //             ],
-                      //           ),
-                      //           child: Text(
-                      //             "COPY",
-                      //             style: context.responsiveTextStyle(
-                      //               fontSize: 12,
-                      //               fontWeight: FontWeight.bold,
-                      //               color: Colors.white,
-                      //               letterSpacing: 1.1,
-                      //             ),
-                      //           ),
-                      //         ),
-                      //       ),
-                      //     ],
-                      //   ),
-                      // ),
+
                       SizedBox(height: 20),
                     ],
                   ),
@@ -533,19 +399,7 @@ class _MoreScreenState extends State<MoreScreen> {
                     child: AdWidget(ad: adsController.banner2!),
                   );
                 }),
-                // Consumer<AdsProvider>(
-                //   builder: (_, ads, __) {
-                //     final banner = ads.getBannerAd2;
-                //     return banner != null
-                //         ? Container(
-                //             alignment: Alignment.center,
-                //             width: banner.size.width.toDouble(),
-                //             height: banner.size.height.toDouble(),
-                //             child: AdWidget(ad: banner),
-                //           )
-                //         : SizedBox.shrink();
-                //   },
-                // ),
+
               ],
             ),
           ),

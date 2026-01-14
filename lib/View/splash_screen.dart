@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../utils/logo_painter.dart';
 import '../utils/app_theme.dart';
 import 'Widgets/navbar.dart';
+import 'home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -34,7 +35,7 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed && mounted) {
         Future.delayed(const Duration(milliseconds: 500), () {
-          Get.offAll(() => const BottomNavigator());
+          Get.offAll(() => const HomeScreen());
         });
       }
     });

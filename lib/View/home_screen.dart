@@ -19,16 +19,17 @@ import 'package:vpnprowithjava/View/premium_access_screen.dart';
 import 'package:vpnprowithjava/View/server_tabs.dart';
 import 'package:vpnprowithjava/View/splash_screen.dart';
 import 'package:vpnprowithjava/View/subscription_manager.dart';
-import 'package:vpnprowithjava/utils/colors.dart';
+// import 'package:vpnprowithjava/utils/colors.dart';
 import 'package:vpnprowithjava/utils/custom_toast.dart';
 import 'package:workmanager/workmanager.dart';
-
+import 'package:vpnprowithjava/utils/app_theme.dart';
 import '../providers/ads_controller.dart';
 import '../providers/apps_provider.dart';
 import '../providers/servers_provider.dart';
 import '../providers/vpn_connection_provider.dart';
 import '../utils/analytics_service.dart';
 import '../utils/rating_service.dart';
+import 'more_screen.dart';
 
 // Extension for responsive design
 extension ResponsiveContext on BuildContext {
@@ -41,6 +42,7 @@ class HomeScreen extends StatefulWidget {
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
+
 
 class _HomeScreenState extends State<HomeScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
@@ -67,11 +69,6 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _blinkController;
   late Animation<double> _blinkAnimation;
 
-  // late Animation<double> _scaleAnimation;
-
-  // late Animation<double> _fadeAnimation;
-  // late Animation<double> _scaleAnimation;
-
   bool _isWaitingForServer = false;
 
   // Timer? _waitingTimer;
@@ -91,6 +88,8 @@ class _HomeScreenState extends State<HomeScreen>
 
   final SubscriptionController subscriptionManager = Get.find();
   final ratingService = RatingService();
+
+
 
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
@@ -121,23 +120,28 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   final AdsController adsController = Get.find();
+  Color _getPrimaryColor(bool connected) {
+    final isDark = AppTheme.isDarkMode(context);
+    return connected
+        ? AppTheme.connected
+        : (isDark ? AppTheme.primaryDark : AppTheme.primaryLight);
+  }
 
-  // late AdsProvider _adsProvider;
-  //
-  // @override
-  // void didChangeDependencies() {
-  //   super.didChangeDependencies();
-  //   _adsProvider = Provider.of<AdsProvider>(context, listen: false);
-  // }
+  Color _getAccentColor(bool connected) {
+    final isDark = AppTheme.isDarkMode(context);
+    return connected
+        ? AppTheme.connected
+        : (isDark ? AppTheme.accentDark : AppTheme.accentLight);
+  }
+
+
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _myProvider = context.read<ServersProvider>(); // safe at init
-    // subscriptionManager = context.read<SubscriptionManager>();
 
-    // Initialize animation controllers
     _animationController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
@@ -468,11 +472,11 @@ class _HomeScreenState extends State<HomeScreen>
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeOutBack,
               child: AlertDialog(
-                backgroundColor: UIColors.cardBg,
+                backgroundColor: AppTheme.getCardColor(context),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                   side: BorderSide(
-                    color: UIColors.warmGold.withValues(alpha: 0.3),
+                    color: AppTheme.premiumGold,
                   ),
                 ),
                 title: const Text(
@@ -494,8 +498,8 @@ class _HomeScreenState extends State<HomeScreen>
                 actions: [
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: UIColors.warmGold,
-                      foregroundColor: UIColors.darkBg,
+                      backgroundColor:AppTheme.premiumGold,
+                      foregroundColor:AppTheme.bgDark,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -691,7 +695,7 @@ class _HomeScreenState extends State<HomeScreen>
                             RadarLoadingAnimation(
                               controller: _radarController,
                               size: animationSize,
-                              color: UIColors.primaryPurple,
+                              color:_getPrimaryColor(connected),
                             ),
                             Transform.scale(
                               scale: scale,
@@ -700,14 +704,12 @@ class _HomeScreenState extends State<HomeScreen>
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: UIColors.primaryPurple
-                                          .withValues(alpha: 0.3),
+                                      color:_getPrimaryColor(connected).withValues(alpha: 0.6),
                                       blurRadius: animationSize * 0.13,
                                       spreadRadius: animationSize * 0.04,
                                     ),
                                     BoxShadow(
-                                      color: UIColors.lightPurple
-                                          .withValues(alpha: 0.2),
+                                      color: _getPrimaryColor(connected).withValues(alpha: 0.6),
                                       blurRadius: animationSize * 0.22,
                                       spreadRadius: animationSize * 0.09,
                                     ),
@@ -737,18 +739,18 @@ class _HomeScreenState extends State<HomeScreen>
                                 RotatingGradientRing(
                                   t: _animationController.value,
                                   size: animationSize,
-                                  color: UIColors.accentTeal,
+                                  color: _getAccentColor(connected),
                                 ),
                                 FloatingHorizontalLines(
                                   controller: _animationController,
                                   size: animationSize,
-                                  color: UIColors.primaryPurple,
+                                  color: _getPrimaryColor(connected),
                                 ),
                                 FloatingLeftWindLines(
                                   controller: _animationController,
                                   size: animationSize,
                                   color:
-                                      UIColors.softTeal.withValues(alpha: 0.8),
+                                  _getAccentColor(connected).withValues(alpha: 0.8),
                                 ),
                                 AnimatedScale(
                                   scale: 1 +
@@ -762,7 +764,7 @@ class _HomeScreenState extends State<HomeScreen>
                                       shape: BoxShape.circle,
                                       boxShadow: [
                                         BoxShadow(
-                                          color: UIColors.accentTeal
+                                          color:  _getAccentColor(connected)
                                               .withValues(alpha: 0.4),
                                           blurRadius: animationSize * 0.13,
                                           spreadRadius: animationSize * 0.04,
@@ -792,7 +794,7 @@ class _HomeScreenState extends State<HomeScreen>
                                 RadarLoadingAnimation(
                                   controller: _animationController,
                                   size: animationSize,
-                                  color: UIColors.primaryPurple,
+                                  color: _getPrimaryColor(connected),
                                 ),
                                 Transform.scale(
                                   scale: scale,
@@ -801,14 +803,13 @@ class _HomeScreenState extends State<HomeScreen>
                                       shape: BoxShape.circle,
                                       boxShadow: [
                                         BoxShadow(
-                                          color: UIColors.primaryPurple
+                                          color: _getPrimaryColor(connected)
                                               .withValues(alpha: 0.3),
                                           blurRadius: animationSize * 0.13,
                                           spreadRadius: animationSize * 0.04,
                                         ),
                                         BoxShadow(
-                                          color: UIColors.lightPurple
-                                              .withValues(alpha: 0.2),
+                                          color: _getPrimaryColor(connected).withValues(alpha: 0.6),
                                           blurRadius: animationSize * 0.22,
                                           spreadRadius: animationSize * 0.09,
                                         ),
@@ -891,19 +892,19 @@ class _HomeScreenState extends State<HomeScreen>
 
         // Dynamic colors based on connection state
         final speedBlockColor =
-            connected ? UIColors.accentTeal : UIColors.primaryPurple;
+            connected ? _getAccentColor(connected) : _getPrimaryColor(connected);
         final blockBackgroundColor = connected
-            ? UIColors.connectedBg.withValues(alpha: 0.8)
-            : UIColors.cardBg;
+            ? AppTheme.connected.withValues(alpha: 0.8)
+            : AppTheme.getCardColor(context);
         final appFilterBackgroundColor = connected
-            ? UIColors.softTeal.withValues(alpha: 0.2)
-            : UIColors.cardBg;
+            ? _getAccentColor(connected).withValues(alpha: 0.8)
+            : AppTheme.getCardColor(context);
         final serverBlockColor = connected
-            ? UIColors.connectedBg.withValues(alpha: 0.9)
-            : UIColors.cardBg;
+            ?  AppTheme.connected .withValues(alpha: 0.9)
+            : AppTheme.getCardColor(context);
         final adBannerColor = connected
-            ? UIColors.connectedBg.withValues(alpha: 0.9)
-            : UIColors.cardBg;
+            ?  AppTheme.connected
+            : AppTheme.getCardColor(context) ;
         // final textColor = connected ? Colors.white : Colors.white70;
         final textColor = Colors.white;
 
@@ -918,15 +919,15 @@ class _HomeScreenState extends State<HomeScreen>
                     end: Alignment.bottomCenter,
                     colors: connected
                         ? [
-                            UIColors.connectedBg,
-                            UIColors.connectedBg,
-                            UIColors.connectedBg.withValues(alpha: 0.8),
-                            UIColors.darkBg
+                      AppTheme.connected,
+                      AppTheme.connected,
+                      AppTheme.connected.withValues(alpha: 0.8),
+                      AppTheme.bgDark
                           ]
                         : [
-                            UIColors.darkBg,
-                            UIColors.darkBg.withValues(alpha: 0.9),
-                            UIColors.cardBg
+                      AppTheme.bgDark,
+                      AppTheme.bgDark.withValues(alpha: 0.9),
+                      AppTheme.bgDark
                           ],
                   ),
                 ),
@@ -948,7 +949,7 @@ class _HomeScreenState extends State<HomeScreen>
                                 text: TextSpan(
                                   children: [
                                     TextSpan(
-                                      text: "VPN",
+                                      text: "SHIELD",
                                       style: GoogleFonts.montserrat(
                                         color: Colors.white,
                                         fontSize: titleFontSize - 1,
@@ -957,11 +958,11 @@ class _HomeScreenState extends State<HomeScreen>
                                       ),
                                     ),
                                     TextSpan(
-                                      text: "Max",
+                                      text: "VPN",
                                       style: GoogleFonts.montserrat(
                                         color: connected
-                                            ? UIColors.accentTeal
-                                            : UIColors.primaryPurple,
+                                            ? _getAccentColor(connected)
+                                            : _getPrimaryColor(connected),
                                         fontSize: titleFontSize - 1,
                                         fontWeight: FontWeight.bold,
                                         // letterSpacing: 1.2,
@@ -971,62 +972,39 @@ class _HomeScreenState extends State<HomeScreen>
                                 ),
                               ),
                               const Spacer(),
+                              // Settings Button
+                              // Settings Button - CORRECTED VERSION
                               InkWell(
                                 onTap: () {
-                                  if (!connected) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            AllowedAppsScreen(),
-                                      ),
-                                    );
-                                  } else {
-                                    showLogoToast(
-                                        "Please disconnect the VPN to manage app filters.",
-                                        duration: const Duration(seconds: 4));
-                                  }
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const MoreScreen()),
+                                  );
                                 },
                                 child: Container(
-                                  margin:
-                                      EdgeInsets.only(top: topPadding * 0.25),
-                                  padding: EdgeInsets.symmetric(
-                                      vertical: 10, horizontal: 12),
+                                  padding: EdgeInsets.all(spacingSmall * 0.6),
                                   decoration: BoxDecoration(
-                                    color: appFilterBackgroundColor,
-                                    borderRadius: BorderRadius.circular(6),
+                                    color: AppTheme.getCardColor(context),
+                                    borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: connected
-                                          ? UIColors.accentTeal
-                                              .withValues(alpha: 0.3)
-                                          : UIColors.primaryPurple
-                                              .withValues(alpha: 0.3),
+                                      color: _getPrimaryColor(connected).withValues(alpha: 0.3),
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: (connected
-                                                ? UIColors.accentTeal
-                                                : UIColors.primaryPurple)
-                                            .withValues(alpha: 0.2),
-                                        blurRadius: borderRadius,
+                                        color: _getPrimaryColor(connected).withValues(alpha: 0.2),
+                                        blurRadius: 8,
                                         spreadRadius: 1,
                                       ),
                                     ],
                                   ),
-                                  child: Text(
-                                    "APP FILTER",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      // color: connected
-                                      //     ? UIColors.accentTeal
-                                      //     : UIColors.primaryPurple,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1.1,
-                                      fontSize: appFilterFontSize - 1,
-                                    ),
+                                  child: Icon(
+                                    Icons.settings,
+                                    color: _getPrimaryColor(connected),
+                                    size: iconSize * 0.6,
                                   ),
                                 ),
                               ),
+
                             ],
                           ),
                           SizedBox(height: spacingSmall),
@@ -1059,8 +1037,8 @@ class _HomeScreenState extends State<HomeScreen>
                                     Icon(
                                       Icons.arrow_downward,
                                       color: connected
-                                          ? UIColors.accentTeal
-                                          : UIColors.primaryPurple,
+                                          ?_getAccentColor(connected)
+                                          : _getPrimaryColor(connected),
                                       size: speedLabelFontSize + 10,
                                     ),
                                     SizedBox(width: sidePadding * 0.3),
@@ -1108,8 +1086,9 @@ class _HomeScreenState extends State<HomeScreen>
                                     Icon(
                                       Icons.arrow_upward,
                                       color: connected
-                                          ? UIColors.accentTeal
-                                          : UIColors.primaryPurple,
+                                          ? _getAccentColor(connected)
+
+                                          : _getPrimaryColor(connected),
                                       size: speedLabelFontSize + 10,
                                     ),
                                     SizedBox(width: sidePadding * 0.3),
@@ -1231,17 +1210,17 @@ class _HomeScreenState extends State<HomeScreen>
                                             largeBorderRadius),
                                         border: Border.all(
                                           color: connected
-                                              ? UIColors.accentTeal
+                                              ? _getAccentColor(connected)
                                                   .withValues(alpha: 0.4)
-                                              : UIColors.primaryPurple
+                                              : _getPrimaryColor(connected)
                                                   .withValues(alpha: 0.3),
                                           width: 1.5,
                                         ),
                                         boxShadow: [
                                           BoxShadow(
                                             color: (connected
-                                                    ? UIColors.accentTeal
-                                                    : UIColors.primaryPurple)
+                                                    ? _getAccentColor(connected)
+                                                    : _getPrimaryColor(connected))
                                                 .withValues(alpha: 0.2),
                                             blurRadius: borderRadius,
                                             spreadRadius: 2,
@@ -1293,8 +1272,7 @@ class _HomeScreenState extends State<HomeScreen>
                                                   : Icon(
                                                       Icons.flag,
                                                       size: smallIconSize,
-                                                      color: UIColors
-                                                          .primaryPurple,
+                                                      color: _getPrimaryColor(connected),
                                                     ),
                                             ),
                                           ),
@@ -1316,8 +1294,9 @@ class _HomeScreenState extends State<HomeScreen>
                                                 spacingSmall * 0.5),
                                             decoration: BoxDecoration(
                                               color: (connected
-                                                      ? UIColors.accentTeal
-                                                      : UIColors.primaryPurple)
+                                                      ? _getAccentColor(connected)
+
+                                                  : _getPrimaryColor(connected))
                                                   .withValues(alpha: 0.2),
                                               borderRadius:
                                                   BorderRadius.circular(
@@ -1326,8 +1305,8 @@ class _HomeScreenState extends State<HomeScreen>
                                             child: Icon(
                                               Icons.arrow_forward_ios,
                                               color: connected
-                                                  ? UIColors.accentTeal
-                                                  : UIColors.primaryPurple,
+                                                  ? _getAccentColor(connected)
+                                                  : _getPrimaryColor(connected),
                                               size: smallIconSize * 0.75,
                                             ),
                                           ),
@@ -1463,7 +1442,7 @@ class _HomeScreenState extends State<HomeScreen>
                                           );
                                         }
                                       },
-                                      color: UIColors.primaryPurple,
+                                      color: _getPrimaryColor(connected),
                                       height: connectBtnHeight,
                                       borderRadius: largeBorderRadius,
                                     );
@@ -1524,16 +1503,16 @@ class _HomeScreenState extends State<HomeScreen>
                       borderRadius: BorderRadius.circular(largeBorderRadius),
                       border: Border.all(
                         color: (connected
-                                ? UIColors.accentTeal
-                                : UIColors.primaryPurple)
+                                ? _getAccentColor(connected)
+                                : _getPrimaryColor(connected))
                             .withValues(alpha: 0.3),
                         width: 1.5,
                       ),
                       boxShadow: [
                         BoxShadow(
                           color: (connected
-                                  ? UIColors.accentTeal
-                                  : UIColors.primaryPurple)
+                                  ? _getAccentColor(connected)
+                                  : _getPrimaryColor(connected))
                               .withValues(alpha: 0.2),
                           blurRadius: borderRadius,
                           spreadRadius: 2,
@@ -1548,12 +1527,12 @@ class _HomeScreenState extends State<HomeScreen>
                           height: iconSize,
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [UIColors.warmGold, UIColors.softGold],
+                              colors: [AppTheme.premiumGold, AppTheme.premiumGoldDark  ],
                             ),
                             borderRadius: BorderRadius.circular(iconSize / 2),
                             boxShadow: [
                               BoxShadow(
-                                color: UIColors.warmGold.withValues(alpha: 0.3),
+                                color: AppTheme.premiumGold.withValues(alpha: 0.3),
                                 blurRadius: borderRadius,
                                 spreadRadius: 1,
                               ),
@@ -1602,12 +1581,12 @@ class _HomeScreenState extends State<HomeScreen>
                           ),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [UIColors.warmGold, UIColors.softGold],
+                              colors: [AppTheme.premiumGold,AppTheme.premiumGoldDark ],
                             ),
                             borderRadius: BorderRadius.circular(borderRadius),
                             boxShadow: [
                               BoxShadow(
-                                color: UIColors.warmGold.withValues(alpha: 0.3),
+                                color: AppTheme.premiumGold.withValues(alpha: 0.3),
                                 blurRadius: borderRadius,
                                 spreadRadius: 1,
                               ),
@@ -1657,7 +1636,7 @@ class _HomeScreenState extends State<HomeScreen>
                           horizontal: 7,
                         ),
                         decoration: BoxDecoration(
-                          color: UIColors.warmGold,
+                          color: AppTheme.premiumGold  ,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Text(
@@ -1712,13 +1691,13 @@ class _HomeScreenState extends State<HomeScreen>
         color: adBannerColor,
         borderRadius: BorderRadius.circular(largeBorderRadius),
         border: Border.all(
-          color: (connected ? UIColors.accentTeal : UIColors.primaryPurple)
+          color: (connected ?  _getAccentColor(connected) : _getPrimaryColor(connected))
               .withValues(alpha: 0.3),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: (connected ? UIColors.accentTeal : UIColors.primaryPurple)
+            color: (connected ?  _getAccentColor(connected): _getPrimaryColor(connected))
                 .withValues(alpha: 0.2),
             blurRadius: borderRadius,
             spreadRadius: 2,
@@ -1733,12 +1712,12 @@ class _HomeScreenState extends State<HomeScreen>
             height: iconSize,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [UIColors.warmGold, UIColors.softGold],
+                colors: [AppTheme.premiumGold , AppTheme.premiumGoldDark],
               ),
               borderRadius: BorderRadius.circular(iconSize / 2),
               boxShadow: [
                 BoxShadow(
-                  color: UIColors.warmGold.withValues(alpha: 0.3),
+                  color: AppTheme.premiumGold .withValues(alpha: 0.3),
                   blurRadius: borderRadius,
                   spreadRadius: 1,
                 ),
@@ -1817,9 +1796,9 @@ Future<bool> hasInternetConnection() async {
 
 // Enhanced disconnect dialog function
 void showEnhancedDisconnectDialog(
-  BuildContext context,
-  VoidCallback onConfirm,
-) {
+    BuildContext context,
+    VoidCallback onConfirm,
+    ) {
   showDialog(
     context: context,
     barrierDismissible: true,
@@ -1830,11 +1809,12 @@ void showEnhancedDisconnectDialog(
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOutBack,
           child: AlertDialog(
-            backgroundColor: UIColors.cardBg,
+            backgroundColor: AppTheme.getCardColor(context),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
-              side: BorderSide(
-                  color: UIColors.lightPurple.withValues(alpha: 0.3)),
+              // side: BorderSide(
+              //   color: _getPrimaryColor(false).withValues(alpha: 0.6),
+              // ),
             ),
             title: const Text(
               "Disconnect?",
@@ -1846,7 +1826,10 @@ void showEnhancedDisconnectDialog(
             ),
             content: const Text(
               "Are you sure you want to disconnect from the VPN?",
-              style: TextStyle(color: Colors.white70, fontSize: 16),
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+              ),
             ),
             actionsPadding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -1855,7 +1838,7 @@ void showEnhancedDisconnectDialog(
             actions: [
               TextButton(
                 style: TextButton.styleFrom(
-                  foregroundColor: UIColors.lightPurple,
+                  // foregroundColor: _getPrimaryColor(false).withValues(alpha: 0.9),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 12,
@@ -1873,7 +1856,7 @@ void showEnhancedDisconnectDialog(
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: UIColors.accentTeal,
+                  backgroundColor: AppTheme.connected,
                   foregroundColor: Colors.black,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -1889,7 +1872,9 @@ void showEnhancedDisconnectDialog(
                 },
                 child: const Text(
                   "Disconnect",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -1899,6 +1884,7 @@ void showEnhancedDisconnectDialog(
     },
   );
 }
+
 
 class ConnectButton extends StatelessWidget {
   final VoidCallback onPressed;
@@ -2026,8 +2012,8 @@ class ConnectingButton extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [
-                          UIColors.accentTeal,
-                          UIColors.connectGreen,
+                          AppTheme.connected,
+                          AppTheme.success,
                         ],
                       ),
                       borderRadius: BorderRadius.horizontal(
@@ -2042,7 +2028,7 @@ class ConnectingButton extends StatelessWidget {
                     width: constraints.maxWidth * (1 - progress),
                     height: height,
                     decoration: BoxDecoration(
-                      color: UIColors.cardBg.withValues(alpha: 0.8),
+                      color: AppTheme.getCardColor(context).withValues(alpha: 0.8),
                       borderRadius: BorderRadius.horizontal(
                         right: Radius.circular(borderRadius),
                         left: Radius.circular(
@@ -2050,7 +2036,7 @@ class ConnectingButton extends StatelessWidget {
                         ),
                       ),
                       border: Border.all(
-                        color: UIColors.accentTeal.withValues(alpha: 0.3),
+                        color: AppTheme.connected.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -2099,13 +2085,13 @@ class DisconnectButton extends StatelessWidget {
       height: height,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: UIColors.accentTeal,
+          backgroundColor: AppTheme.connected,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(borderRadius),
           ),
           elevation: 8,
-          shadowColor: UIColors.accentTeal.withValues(alpha: 0.4),
+          shadowColor: AppTheme.connected.withValues(alpha: 0.4),
         ),
         onPressed: onPressed,
         child: Text(
@@ -2167,8 +2153,8 @@ class _WaitingButtonState extends State<WaitingButton>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            UIColors.warmGold.withValues(alpha: 0.8),
-            UIColors.warmGold.withValues(alpha: 0.8),
+            AppTheme.premiumGold.withValues(alpha: 0.8),
+            AppTheme.premiumGoldDark.withValues(alpha: 0.8),
           ],
         ),
         borderRadius: BorderRadius.circular(widget.borderRadius),

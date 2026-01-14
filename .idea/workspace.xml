@@ -5,19 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b1d88a55-7d82-40b8-8630-180ff1b14dd0" name="Changes" comment="new code">
-      <change afterPath="$PROJECT_DIR$/lib/utils/app_theme.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/AndroidManifest.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-hdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-hdpi/ic_launcher.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-mdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-mdpi/ic_launcher.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/View/Widgets/navbar.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/navbar.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/View/allowed_app_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/allowed_app_screen.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/View/home_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/home_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/View/more_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/more_screen.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/View/splash_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/splash_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -123,5 +116,16 @@
     <MESSAGE value="new" />
     <MESSAGE value="new code" />
     <option name="LAST_COMMIT_MESSAGE" value="new code" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="Dart">
+          <url>file://$PROJECT_DIR$/lib/View/home_screen.dart</url>
+          <line>21</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
