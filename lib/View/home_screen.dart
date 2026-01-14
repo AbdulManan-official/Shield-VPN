@@ -7,15 +7,12 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:http/http.dart' as http;
 import 'package:openvpn_flutter/openvpn_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vpnprowithjava/View/Widgets/floating_lines_animation.dart';
 import 'package:vpnprowithjava/View/Widgets/radar_loading_animation.dart';
-import 'package:vpnprowithjava/View/allowed_app_screen.dart';
-import 'package:vpnprowithjava/View/premium_access_screen.dart';
 import 'package:vpnprowithjava/View/server_tabs.dart';
 import 'package:vpnprowithjava/View/splash_screen.dart';
 import 'package:vpnprowithjava/View/subscription_manager.dart';
@@ -110,7 +107,6 @@ class _HomeScreenState extends State<HomeScreen>
       _scheduleDisconnectTask();
     }
     if (state == AppLifecycleState.resumed) {
-      _checkSubscriptionStatus();
     }
   }
 
@@ -171,19 +167,13 @@ class _HomeScreenState extends State<HomeScreen>
         curve: Curves.easeInOut,
       ),
     );
-    // _scaleAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
-    //   CurvedAnimation(
-    //     parent: _blinkController,
-    //     curve: Curves.easeOutBack,
-    //   ),
-    // );
+
 
     _blinkController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         _blinkController.reverse();
       } else if (status == AnimationStatus.dismissed) {
-        // _blinkCount++;
-        // if (_blinkCount < _maxBlinks) {
+
         _blinkController.forward();
         // }
       }
@@ -200,7 +190,6 @@ class _HomeScreenState extends State<HomeScreen>
       // adsController.preloadInterstitial();
       // adsController.loadBanner();
 
-      _checkSubscriptionStatus();
       // _requestPermission();
 
       final vpnConnectionProvider =
@@ -230,10 +219,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
 
-  Future<void> _checkSubscriptionStatus() async {
-    debugPrint("_checkSubscriptionStatus CALLED--");
-    subscriptionManager.loadSubscriptionStatus();
-  }
+
 
   Future<void> _saveAppState() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -1129,42 +1115,7 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
 
                   // Ad Banner Section - Only show if not subscribed
-                  Obx(() {
-                    debugPrint(
-                        '👀 Obx rebuild: ${subscriptionManager.isSubscribed.value}');
 
-                    if (subscriptionManager.isSubscribed.value) {
-                      return buildSubscribedBox(
-                        sidePadding,
-                        bannerHeight,
-                        adBannerColor,
-                        largeBorderRadius,
-                        connected,
-                        borderRadius,
-                        iconSize,
-                        smallIconSize,
-                        bannerTitleFontSize,
-                        bannerSubtitleFontSize,
-                      );
-                    }
-
-                    return buildNonSubscribedBox(
-                      sidePadding,
-                      spacingMedium,
-                      bannerHeight,
-                      adBannerColor,
-                      largeBorderRadius,
-                      connected,
-                      borderRadius,
-                      iconSize,
-                      smallIconSize,
-                      bannerTitleFontSize,
-                      bannerSubtitleFontSize,
-                      spacingSmall,
-                      context,
-                      upgradeFontSize,
-                    );
-                  }),
 
                   // Flexible spacer to balance the layout
                   Expanded(
@@ -1361,10 +1312,7 @@ class _HomeScreenState extends State<HomeScreen>
                                         onPressed: () async {
                                           showEnhancedDisconnectDialog(context,
                                               () async {
-                                            // final ads =
-                                            // Provider.of<AdsProvider>(
-                                            //     context,
-                                            //     listen: false);
+
                                             await adsController
                                                 .showInterstitial();
 
@@ -1374,11 +1322,7 @@ class _HomeScreenState extends State<HomeScreen>
                                             AnalyticsService.logFirebaseEvent(
                                               'vpn_disconnect',
                                             );
-                                            // Fluttertoast.showToast(
-                                            //   msg:
-                                            //       "VPN Disconnected Successfully",
-                                            //   backgroundColor: Colors.red,
-                                            // );
+
                                             showLogoToast(
                                               "Disconnected",
                                               color: Colors.red,
@@ -1464,300 +1408,8 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Column buildNonSubscribedBox(
-      double sidePadding,
-      double spacingMedium,
-      double bannerHeight,
-      Color adBannerColor,
-      double largeBorderRadius,
-      bool connected,
-      double borderRadius,
-      double iconSize,
-      double smallIconSize,
-      double bannerTitleFontSize,
-      double bannerSubtitleFontSize,
-      double spacingSmall,
-      BuildContext context,
-      double upgradeFontSize) {
-    return Column(
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: sidePadding),
-          child: Column(
-            children: [
-              SizedBox(height: spacingMedium + 5),
-              // First banner - Always show upgrade promotion at top
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    // height: bannerHeight,
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      color: adBannerColor,
-                      borderRadius: BorderRadius.circular(largeBorderRadius),
-                      border: Border.all(
-                        color: (connected
-                                ? _getAccentColor(connected)
-                                : _getPrimaryColor(connected))
-                            .withValues(alpha: 0.3),
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: (connected
-                                  ? _getAccentColor(connected)
-                                  : _getPrimaryColor(connected))
-                              .withValues(alpha: 0.2),
-                          blurRadius: borderRadius,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        SizedBox(width: sidePadding * 0.75),
-                        Container(
-                          width: iconSize,
-                          height: iconSize,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [AppTheme.premiumGold, AppTheme.premiumGoldDark  ],
-                            ),
-                            borderRadius: BorderRadius.circular(iconSize / 2),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.premiumGold.withValues(alpha: 0.3),
-                                blurRadius: borderRadius,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Icon(
-                              Icons.local_offer,
-                              color: const Color(0xFF1A1A2E),
-                              size: smallIconSize,
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: sidePadding * 0.75),
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              AutoSizeText(
-                                "Premium VPN - 50% OFF",
-                                maxLines: 1,
-                                style: TextStyle(
-                                  color: connected ? Colors.white : AppTheme.getTextPrimaryColor(context),  // ✅
-                                  fontSize: bannerTitleFontSize,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              AutoSizeText(
-                                "Upgrade now for no limit",
-                                maxLines: 2,
-                                style: TextStyle(
-                                  color: connected
-                                      ? Colors.white70
-                                      : AppTheme.getTextSecondaryColor(context),  // ✅
-                                  fontSize: bannerSubtitleFontSize,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          width: MediaQuery.of(context).size.width * 0.235,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: sidePadding - 5,
-                            vertical: spacingSmall * 0.55,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [AppTheme.premiumGold,AppTheme.premiumGoldDark ],
-                            ),
-                            borderRadius: BorderRadius.circular(borderRadius),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.premiumGold.withValues(alpha: 0.3),
-                                blurRadius: borderRadius,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                          child: InkWell(
-                            onTap: () async {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => PremiumAccessScreen(),
-                                ),
-                              );
-                            },
-                            child: Center(
-                              child: AutoSizeText(
-                                "UPGRADE",
-                                maxLines: 1,
-                                maxFontSize: 15,
-                                style: TextStyle(
-                                  color: const Color(0xFF1A1A2E),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: upgradeFontSize,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: sidePadding * 0.75),
-                      ],
-                    ),
-                  ),
-                  Positioned(
-                    top: -12.4,
-                    left: 10,
-                    child: AnimatedBuilder(
-                      animation: _blinkAnimation,
-                      builder: (context, child) {
-                        return Opacity(
-                          opacity: _blinkAnimation.value,
-                          child: child,
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 3.5,
-                          horizontal: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.premiumGold  ,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Text(
-                          "Limited Time Offer",
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: spacingMedium),
-        Obx(() {
-          if (!adsController.isBannerAdLoaded.value &&
-              adsController.banner == null) {
-            return const SizedBox();
-          }
-
-          return SizedBox(
-            width: adsController.banner!.size.width.toDouble(),
-            height: adsController.banner!.size.height.toDouble(),
-            child: AdWidget(ad: adsController.banner!),
-          );
-        }),
-
-      ],
-    );
   }
 
-  Container buildSubscribedBox(
-      double sidePadding,
-      double bannerHeight,
-      Color adBannerColor,
-      double largeBorderRadius,
-      bool connected,
-      double borderRadius,
-      double iconSize,
-      double smallIconSize,
-      double bannerTitleFontSize,
-      double bannerSubtitleFontSize) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: sidePadding),
-      height: bannerHeight,
-      decoration: BoxDecoration(
-        color: adBannerColor,
-        borderRadius: BorderRadius.circular(largeBorderRadius),
-        border: Border.all(
-          color: (connected ?  _getAccentColor(connected) : _getPrimaryColor(connected))
-              .withValues(alpha: 0.3),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: (connected ?  _getAccentColor(connected): _getPrimaryColor(connected))
-                .withValues(alpha: 0.2),
-            blurRadius: borderRadius,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          SizedBox(width: sidePadding * 0.75),
-          Container(
-            width: iconSize,
-            height: iconSize,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppTheme.premiumGold , AppTheme.premiumGoldDark],
-              ),
-              borderRadius: BorderRadius.circular(iconSize / 2),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.premiumGold .withValues(alpha: 0.3),
-                  blurRadius: borderRadius,
-                  spreadRadius: 1,
-                ),
-              ],
-            ),
-            child: Center(
-              child: Icon(
-                Icons.shield,
-                color: const Color(0xFF1A1A2E),
-                size: smallIconSize,
-              ),
-            ),
-          ),
-          SizedBox(width: sidePadding * 0.75),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "You're Now a Premium Member",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: bannerTitleFontSize,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  "Enjoy Ad-Free, Most Secure and Ultra Fast.",
-                  style: TextStyle(
-                    color: Colors.white60,
-                    fontSize: bannerSubtitleFontSize,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 Future<bool> hasInternetConnection() async {
   final connectivityResults = await Connectivity().checkConnectivity();

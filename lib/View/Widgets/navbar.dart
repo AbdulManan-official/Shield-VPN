@@ -2212,3 +2212,5 @@
 //     );
 //   }
 // }
+
+// now i have a screen that u will redeisgn based on dark and light mode . the ui is just for u for the idea . we will use gifs . as well just redeign the ui . before connecting we will show like this and then after it we will deisgn it in this way . like we will show the speeds in this way at the top of the center animation . i need a clean header and button of setting. then the center where we will show gifs . we will create a button at center for connecting it . and the servers will be as it is in the buttom . just take center button in center and place the gifs in it . also show the speeds section slike download and upload when the vpn is connected and hide them when vpn is disconnected . use the colors that i gave u in theme . the pics are just for ui . the download and upload buttons will be at top of connect .thats the cod eo fthe screen .cn u do this

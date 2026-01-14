@@ -4,20 +4,11 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b1d88a55-7d82-40b8-8630-180ff1b14dd0" name="Changes" comment="structured the ui of home">
+    <list default="true" id="b1d88a55-7d82-40b8-8630-180ff1b14dd0" name="Changes" comment="added the theme file in the app screens">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/Widgets/custom_banner_ad.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/custom_banner_ad.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/Widgets/floating_lines_animation.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/floating_lines_animation.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/Widgets/internet_connection_manager.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/internet_connection_manager.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/images/splashlogo.jpg" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/View/Widgets/navbar.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/navbar.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/Widgets/recommended_server_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/recommended_server_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/Widgets/servers_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/servers_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/allowed_app_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/allowed_app_screen.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/View/home_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/home_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/more_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/more_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/premium_access_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/premium_access_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/server_tabs.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/server_tabs.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/splash_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/splash_screen.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -113,7 +104,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768371905276</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="added the theme file in the app screens">
+      <option name="closed" value="true" />
+      <created>1768382705205</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1768382705205</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -131,15 +130,21 @@
     <MESSAGE value="new" />
     <MESSAGE value="new code" />
     <MESSAGE value="structured the ui of home" />
-    <option name="LAST_COMMIT_MESSAGE" value="structured the ui of home" />
+    <MESSAGE value="added the theme file in the app screens" />
+    <option name="LAST_COMMIT_MESSAGE" value="added the theme file in the app screens" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="Dart">
           <url>file://$PROJECT_DIR$/lib/View/home_screen.dart</url>
-          <line>21</line>
+          <line>18</line>
           <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="Dart">
+          <url>file://$PROJECT_DIR$/lib/View/home_screen.dart</url>
+          <line>812</line>
+          <option name="timeStamp" value="5" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
