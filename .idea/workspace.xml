@@ -5,10 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b1d88a55-7d82-40b8-8630-180ff1b14dd0" name="Changes" comment="added the theme file in the app screens">
+      <change afterPath="$PROJECT_DIR$/lib/View/backup.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/images/splashlogo.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/Widgets/navbar.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/navbar.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/View/Widgets/custom_banner_ad.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/custom_banner_ad.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/View/Widgets/floating_lines_animation.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/floating_lines_animation.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/View/Widgets/recommended_server_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/recommended_server_screen.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/View/home_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/home_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,6 +69,11 @@
     &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\Flutter_projects\Vpn-Max-main (1)\Vpn-Max-main\assets" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration name="main.dart" type="FlutterRunConfigurationType" factoryName="Flutter">
       <option name="filePath" value="$PROJECT_DIR$/lib/main.dart" />
@@ -112,7 +120,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768382705205</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="added the theme file in the app screens">
+      <option name="closed" value="true" />
+      <created>1768390982403</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1768390982404</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -138,13 +154,13 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="Dart">
           <url>file://$PROJECT_DIR$/lib/View/home_screen.dart</url>
-          <line>18</line>
+          <line>14</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="Dart">
           <url>file://$PROJECT_DIR$/lib/View/home_screen.dart</url>
-          <line>812</line>
-          <option name="timeStamp" value="5" />
+          <line>786</line>
+          <option name="timeStamp" value="8" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

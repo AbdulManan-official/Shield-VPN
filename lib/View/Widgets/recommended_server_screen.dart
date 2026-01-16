@@ -69,7 +69,6 @@ class ToastHelper {
       message,
       duration: duration,
       color: backgroundColor,
-      logoStr: logoStr ?? 'assets/images/vpnlogo.png',
     );
 
     _toastTimer = Timer(duration, () {

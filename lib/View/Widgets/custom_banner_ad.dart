@@ -1,263 +1,871 @@
+// import 'dart:async';
 // import 'dart:math';
 // import 'dart:ui';
+//
+// import 'package:auto_size_text/auto_size_text.dart';
+// import 'package:connectivity_plus/connectivity_plus.dart';
 // import 'package:flutter/material.dart';
+// import 'package:flutter/services.dart';
+// import 'package:get/get.dart';
+// import 'package:google_fonts/google_fonts.dart';
+// import 'package:openvpn_flutter/openvpn_flutter.dart';
+// import 'package:provider/provider.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:vpnprowithjava/View/server_tabs.dart';
+// import 'package:vpnprowithjava/utils/custom_toast.dart';
 // import 'package:vpnprowithjava/utils/app_theme.dart';
+// import '../providers/ads_controller.dart';
+// import '../providers/apps_provider.dart';
+// import '../providers/servers_provider.dart';
+// import '../providers/vpn_connection_provider.dart';
+// import '../utils/analytics_service.dart';
+// import '../utils/rating_service.dart';
+// import 'more_screen.dart';
 //
-// class VpnLogoPainter extends CustomPainter {
-//   final double progress; // 0.0 → 1.0
-//   final bool isDarkMode;
+// class Particle {
+//   double x;
+//   double y;
+//   double vx;
+//   double vy;
+//   double size;
+//   double opacity;
 //
-//   VpnLogoPainter({
-//     required this.progress,
-//     this.isDarkMode = true,
+//   Particle({
+//     required this.x,
+//     required this.y,
+//     required this.vx,
+//     required this.vy,
+//     required this.size,
+//     required this.opacity,
 //   });
+// }
+//
+// class HomeScreen extends StatefulWidget {
+//   const HomeScreen({super.key});
 //
 //   @override
-//   void paint(Canvas canvas, Size size) {
-//     final centerX = size.width / 2;
-//     final centerY = size.height / 2;
+//   State<HomeScreen> createState() => _HomeScreenState();
+// }
 //
-//     // ✅ Shield dimensions
-//     final shieldWidth = size.width * 0.45;
-//     final shieldHeight = size.height * 0.55;
-//     final shieldTop = centerY - shieldHeight / 2;
-//     final shieldBottom = centerY + shieldHeight / 2;
+// class _HomeScreenState extends State<HomeScreen>
+//     with TickerProviderStateMixin, WidgetsBindingObserver {
+//   // === FIELDS ===
+//   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+//   bool _isLoading = false;
+//   bool _isConnected = false;
 //
-//     // ✅ Use theme colors
-//     final glowColor = isDarkMode ? AppTheme.primaryDark : AppTheme.primaryLight;
-//     final lineColor = isDarkMode ? Colors.white : AppTheme.textPrimaryLight;
-//     final fillColor = isDarkMode
-//         ? AppTheme.primaryDark.withValues(alpha: 0.1)
-//         : AppTheme.primaryLight.withValues(alpha: 0.1);
+//   late AnimationController _pulseController;
+//   late AnimationController _meshController;
+//   late AnimationController _particleController;
+//   late AnimationController _progressController;
 //
-//     // Paint styles
-//     final glowPaint = Paint()
-//       ..color = glowColor
-//       ..style = PaintingStyle.stroke
-//       ..strokeWidth = 4.5
-//       ..strokeCap = StrokeCap.round
-//       ..strokeJoin = StrokeJoin.round
-//       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+//   final AdsController adsController = Get.find();
+//   List<Particle> particles = [];
 //
-//     final linePaint = Paint()
-//       ..color = lineColor
-//       ..style = PaintingStyle.stroke
-//       ..strokeWidth = 3
-//       ..strokeCap = StrokeCap.round
-//       ..strokeJoin = StrokeJoin.round;
+//   @override
+//   void initState() {
+//     super.initState();
+//     WidgetsBinding.instance.addObserver(this);
 //
-//     final fillPaint = Paint()
-//       ..color = fillColor
-//       ..style = PaintingStyle.fill;
+//     _pulseController = AnimationController(
+//       vsync: this,
+//       duration: const Duration(seconds: 2),
+//     )..repeat(reverse: true);
 //
-//     // ============ DRAW SHIELD ============
-//     final shieldPath = Path();
+//     _meshController = AnimationController(
+//       vsync: this,
+//       duration: const Duration(seconds: 10),
+//     )..repeat();
 //
-//     // Top center point
-//     final topPoint = Offset(centerX, shieldTop);
+//     _particleController = AnimationController(
+//       vsync: this,
+//       duration: const Duration(seconds: 20),
+//     )..repeat();
 //
-//     // Top left and right points
-//     final topLeftX = centerX - shieldWidth / 2;
-//     final topRightX = centerX + shieldWidth / 2;
-//     final topY = shieldTop + shieldHeight * 0.15;
+//     _progressController = AnimationController(
+//       vsync: this,
+//       duration: const Duration(seconds: 2),
+//     );
 //
-//     // Middle left and right points (widest part)
-//     final midLeftX = centerX - shieldWidth / 2;
-//     final midRightX = centerX + shieldWidth / 2;
-//     final midY = shieldTop + shieldHeight * 0.5;
+//     _initializeParticles();
 //
-//     // Bottom point (sharp tip)
-//     final bottomPoint = Offset(centerX, shieldBottom);
+//     WidgetsBinding.instance.addPostFrameCallback((_) async {
+//       _connectivitySubscription = Connectivity().onConnectivityChanged.listen(_updateConnectionStatus);
+//       await Provider.of<ServersProvider>(context, listen: false).initialize();
+//       _loadAppState();
+//     });
+//   }
 //
-//     // Animate the shield drawing from top to bottom
-//     final animatedProgress = Curves.easeInOut.transform(progress);
-//
-//     if (animatedProgress > 0) {
-//       shieldPath.moveTo(topPoint.dx, topPoint.dy);
-//
-//       // Top left curve
-//       if (animatedProgress >= 0.15) {
-//         shieldPath.quadraticBezierTo(
-//           topLeftX,
-//           shieldTop,
-//           topLeftX,
-//           topY,
-//         );
-//       } else {
-//         final t = animatedProgress / 0.15;
-//         final controlX = lerpDouble(topPoint.dx, topLeftX, t)!;
-//         final controlY = lerpDouble(topPoint.dy, shieldTop, t)!;
-//         final endX = lerpDouble(topPoint.dx, topLeftX, t)!;
-//         final endY = lerpDouble(topPoint.dy, topY, t)!;
-//         shieldPath.quadraticBezierTo(controlX, controlY, endX, endY);
-//       }
-//
-//       // Left side to middle
-//       if (animatedProgress >= 0.4) {
-//         shieldPath.lineTo(midLeftX, midY);
-//       } else if (animatedProgress > 0.15) {
-//         final t = (animatedProgress - 0.15) / 0.25;
-//         shieldPath.lineTo(
-//           lerpDouble(topLeftX, midLeftX, t)!,
-//           lerpDouble(topY, midY, t)!,
-//         );
-//       }
-//
-//       // Left bottom curve to tip
-//       if (animatedProgress >= 0.65) {
-//         shieldPath.quadraticBezierTo(
-//           midLeftX,
-//           shieldBottom - shieldHeight * 0.15,
-//           bottomPoint.dx,
-//           bottomPoint.dy,
-//         );
-//       } else if (animatedProgress > 0.4) {
-//         final t = (animatedProgress - 0.4) / 0.25;
-//         final controlX = midLeftX;
-//         final controlY = lerpDouble(midY, shieldBottom - shieldHeight * 0.15, t)!;
-//         final endX = lerpDouble(midLeftX, bottomPoint.dx, t)!;
-//         final endY = lerpDouble(midY, bottomPoint.dy, t)!;
-//         shieldPath.quadraticBezierTo(controlX, controlY, endX, endY);
-//       }
-//
-//       // Right bottom curve from tip
-//       if (animatedProgress >= 0.85) {
-//         shieldPath.quadraticBezierTo(
-//           midRightX,
-//           shieldBottom - shieldHeight * 0.15,
-//           midRightX,
-//           midY,
-//         );
-//       } else if (animatedProgress > 0.65) {
-//         final t = (animatedProgress - 0.65) / 0.2;
-//         final controlX = midRightX;
-//         final controlY = lerpDouble(shieldBottom - shieldHeight * 0.15, midY, t)!;
-//         final endX = lerpDouble(bottomPoint.dx, midRightX, t)!;
-//         final endY = lerpDouble(bottomPoint.dy, midY, t)!;
-//         shieldPath.quadraticBezierTo(controlX, controlY, endX, endY);
-//       }
-//
-//       // Right side to top
-//       if (animatedProgress >= 0.95) {
-//         shieldPath.lineTo(topRightX, topY);
-//       } else if (animatedProgress > 0.85) {
-//         final t = (animatedProgress - 0.85) / 0.1;
-//         shieldPath.lineTo(
-//           lerpDouble(midRightX, topRightX, t)!,
-//           lerpDouble(midY, topY, t)!,
-//         );
-//       }
-//
-//       // Top right curve back to center
-//       if (animatedProgress >= 1.0) {
-//         shieldPath.quadraticBezierTo(
-//           topRightX,
-//           shieldTop,
-//           topPoint.dx,
-//           topPoint.dy,
-//         );
-//         shieldPath.close();
-//       } else if (animatedProgress > 0.95) {
-//         final t = (animatedProgress - 0.95) / 0.05;
-//         final controlX = topRightX;
-//         final controlY = shieldTop;
-//         final endX = lerpDouble(topRightX, topPoint.dx, t)!;
-//         final endY = lerpDouble(topY, topPoint.dy, t)!;
-//         shieldPath.quadraticBezierTo(controlX, controlY, endX, endY);
-//       }
-//
-//       // Draw shield with fill and stroke
-//       if (progress >= 1.0) {
-//         canvas.drawPath(shieldPath, fillPaint);
-//       }
-//       canvas.drawPath(shieldPath, glowPaint);
-//       canvas.drawPath(shieldPath, linePaint);
+//   void _initializeParticles() {
+//     final random = Random();
+//     for (int i = 0; i < 50; i++) {
+//       particles.add(Particle(
+//         x: random.nextDouble(),
+//         y: random.nextDouble(),
+//         vx: (random.nextDouble() - 0.5) * 0.0005,
+//         vy: (random.nextDouble() - 0.5) * 0.0005,
+//         size: random.nextDouble() * 3 + 1,
+//         opacity: random.nextDouble() * 0.5 + 0.2,
+//       ));
 //     }
+//   }
 //
-//     // ============ DRAW "V" CHECKMARK INSIDE SHIELD ============
-//     if (progress >= 0.5) {
-//       final checkProgress = ((progress - 0.5) / 0.5).clamp(0.0, 1.0);
-//       final checkPaint = Paint()
-//         ..color = lineColor
-//         ..style = PaintingStyle.stroke
-//         ..strokeWidth = 4
-//         ..strokeCap = StrokeCap.round;
+//   @override
+//   void dispose() {
+//     _pulseController.dispose();
+//     _meshController.dispose();
+//     _particleController.dispose();
+//     _progressController.dispose();
+//     _connectivitySubscription?.cancel();
+//     WidgetsBinding.instance.removeObserver(this);
+//     super.dispose();
+//   }
 //
-//       final checkGlowPaint = Paint()
-//         ..color = glowColor
-//         ..style = PaintingStyle.stroke
-//         ..strokeWidth = 6
-//         ..strokeCap = StrokeCap.round
-//         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+//   void _loadAppState() async {
+//     SharedPreferences prefs = await SharedPreferences.getInstance();
+//     setState(() => _isConnected = prefs.getBool('isConnected') ?? false);
+//   }
 //
-//       // Check mark points
-//       final checkStartX = centerX - shieldWidth * 0.25;
-//       final checkStartY = centerY;
-//       final checkMidX = centerX - shieldWidth * 0.05;
-//       final checkMidY = centerY + shieldHeight * 0.15;
-//       final checkEndX = centerX + shieldWidth * 0.25;
-//       final checkEndY = centerY - shieldHeight * 0.15;
-//
-//       final checkPath = Path();
-//       checkPath.moveTo(checkStartX, checkStartY);
-//
-//       if (checkProgress < 0.5) {
-//         // First half of check
-//         final t = checkProgress / 0.5;
-//         checkPath.lineTo(
-//           lerpDouble(checkStartX, checkMidX, t)!,
-//           lerpDouble(checkStartY, checkMidY, t)!,
-//         );
-//       } else {
-//         // Complete first half
-//         checkPath.lineTo(checkMidX, checkMidY);
-//         // Second half of check
-//         final t = (checkProgress - 0.5) / 0.5;
-//         checkPath.lineTo(
-//           lerpDouble(checkMidX, checkEndX, t)!,
-//           lerpDouble(checkMidY, checkEndY, t)!,
-//         );
-//       }
-//
-//       canvas.drawPath(checkPath, checkGlowPaint);
-//       canvas.drawPath(checkPath, checkPaint);
+//   void _updateConnectionStatus(List<ConnectivityResult> result) {
+//     if (result.contains(ConnectivityResult.none)) {
+//       showLogoToast("No Connection", color: AppTheme.error);
 //     }
+//   }
 //
-//     // ============ DRAW TEXT ============
-//     if (progress >= 0.8) {
-//       final textProgress = ((progress - 0.8) / 0.2).clamp(0.0, 1.0);
-//       final textPainter = TextPainter(
-//         text: TextSpan(
-//           text: 'SHIELD VPN',
-//           style: TextStyle(
-//             color: lineColor.withValues(alpha: textProgress),
-//             fontSize: 24,
-//             fontWeight: FontWeight.bold,
-//             letterSpacing: 2,
-//             shadows: [
-//               Shadow(
-//                 color: glowColor.withValues(alpha: textProgress * 0.6),
-//                 blurRadius: 8,
+//   String formatSpeed(String? bytes) {
+//     double b = double.tryParse(bytes ?? "0") ?? 0;
+//     if (b <= 0) return "0.0 Mbps";
+//     return "${((b * 8) / 1000000).toStringAsFixed(1)} Mbps";
+//   }
+//
+//   // --- UI COMPONENTS ---
+//
+//   Widget _buildParticleBackground(bool isConnected) {
+//     return AnimatedBuilder(
+//       animation: _particleController,
+//       builder: (context, child) {
+//         // Update particle positions
+//         for (var particle in particles) {
+//           particle.x += particle.vx;
+//           particle.y += particle.vy;
+//
+//           // Wrap around edges
+//           if (particle.x < 0) particle.x = 1;
+//           if (particle.x > 1) particle.x = 0;
+//           if (particle.y < 0) particle.y = 1;
+//           if (particle.y > 1) particle.y = 0;
+//         }
+//
+//         return CustomPaint(
+//           painter: ParticlePainter(
+//             particles: particles,
+//             isConnected: isConnected,
+//             isDark: AppTheme.isDarkMode(context),
+//             animationValue: _particleController.value,
+//           ),
+//           size: Size.infinite,
+//         );
+//       },
+//     );
+//   }
+//
+//   Widget _buildMeshBackground() {
+//     return Stack(
+//       children: [
+//         Container(decoration: BoxDecoration(gradient: AppTheme.getBackgroundGradient(context))),
+//         AnimatedBuilder(
+//           animation: _meshController,
+//           builder: (context, child) {
+//             return Stack(
+//               children: [
+//                 Positioned(
+//                   top: -50 + (sin(_meshController.value * 2 * pi) * 20),
+//                   right: -50 + (cos(_meshController.value * 2 * pi) * 30),
+//                   child: _GlowOrb(color: _isConnected ? AppTheme.connected.withOpacity(0.15) : AppTheme.primaryLight.withOpacity(0.1)),
+//                 ),
+//                 Positioned(
+//                   bottom: 100 + (cos(_meshController.value * 2 * pi) * 40),
+//                   left: -80 + (sin(_meshController.value * 2 * pi) * 20),
+//                   child: _GlowOrb(color: AppTheme.accentLight.withOpacity(0.1)),
+//                 ),
+//               ],
+//             );
+//           },
+//         ),
+//       ],
+//     );
+//   }
+//
+//   Widget _buildSpeedCard(String label, String value, IconData icon, Color color) {
+//     return ClipRRect(
+//       borderRadius: BorderRadius.circular(20),
+//       child: BackdropFilter(
+//         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+//         child: Container(
+//           width: MediaQuery.of(context).size.width * 0.43,
+//           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+//           decoration: BoxDecoration(
+//             color: AppTheme.getCardColor(context).withOpacity(0.4),
+//             borderRadius: BorderRadius.circular(20),
+//             border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+//             boxShadow: [
+//               BoxShadow(
+//                 color: color.withOpacity(0.1),
+//                 blurRadius: 20,
+//                 spreadRadius: 2,
+//               ),
+//             ],
+//           ),
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             mainAxisSize: MainAxisSize.min,
+//             children: [
+//               Row(
+//                 children: [
+//                   Container(
+//                     padding: const EdgeInsets.all(8),
+//                     decoration: BoxDecoration(
+//                       color: color.withOpacity(0.1),
+//                       borderRadius: BorderRadius.circular(10),
+//                     ),
+//                     child: Icon(icon, color: color, size: 20),
+//                   ),
+//                   const SizedBox(width: 10),
+//                   Text(
+//                     label,
+//                     style: GoogleFonts.poppins(
+//                       fontSize: 11,
+//                       color: AppTheme.getTextSecondaryColor(context),
+//                       fontWeight: FontWeight.w600,
+//                       letterSpacing: 0.5,
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//               const SizedBox(height: 12),
+//               AutoSizeText(
+//                 value,
+//                 maxLines: 1,
+//                 style: GoogleFonts.poppins(
+//                   fontSize: 20,
+//                   color: AppTheme.getTextPrimaryColor(context),
+//                   fontWeight: FontWeight.bold,
+//                 ),
 //               ),
 //             ],
 //           ),
 //         ),
-//         textDirection: TextDirection.ltr,
-//       );
+//       ),
+//     );
+//   }
 //
-//       textPainter.layout();
-//       textPainter.paint(
-//         canvas,
-//         Offset(
-//           centerX - textPainter.width / 2,
-//           shieldBottom + 25,
-//         ),
-//       );
+//   Widget _buildPowerOrb(bool connected, bool isConnecting, VpnConnectionProvider vpnValue, ServersProvider serversProvider) {
+//     final statusColor = connected
+//         ? AppTheme.connected
+//         : isConnecting
+//         ? AppTheme.connecting
+//         : AppTheme.getPrimaryColor(context);
+//
+//     return GestureDetector(
+//       onTap: () async {
+//         HapticFeedback.mediumImpact();
+//         if (connected) {
+//           showEnhancedDisconnectDialog(context, () async {
+//             await vpnValue.disconnect();
+//             setState(() => _isConnected = false);
+//             _progressController.reset();
+//             showLogoToast("Disconnected", color: AppTheme.error);
+//           });
+//         } else if (!isConnecting) {
+//           if (serversProvider.selectedServer == null) {
+//             return showLogoToast("Please select a server", color: AppTheme.error);
+//           }
+//           await adsController.showInterstitial();
+//           _progressController.repeat();
+//           final AppsController apps = Get.find();
+//           await vpnValue.initPlatformState(
+//             serversProvider.selectedServer!.ovpn,
+//             serversProvider.selectedServer!.country,
+//             apps.disallowList,
+//             serversProvider.selectedServer!.username ?? "",
+//             serversProvider.selectedServer!.password ?? "",
+//           );
+//         }
+//       },
+//       child: AnimatedBuilder(
+//         animation: Listenable.merge([_pulseController, _progressController]),
+//         builder: (context, child) {
+//           return Stack(
+//             alignment: Alignment.center,
+//             children: [
+//               // Outer pulse rings
+//               if (connected) ...[
+//                 Container(
+//                   width: 240 + (_pulseController.value * 20),
+//                   height: 240 + (_pulseController.value * 20),
+//                   decoration: BoxDecoration(
+//                     shape: BoxShape.circle,
+//                     border: Border.all(
+//                       color: statusColor.withOpacity(0.2 - (_pulseController.value * 0.15)),
+//                       width: 2,
+//                     ),
+//                   ),
+//                 ),
+//                 Container(
+//                   width: 210 + (_pulseController.value * 15),
+//                   height: 210 + (_pulseController.value * 15),
+//                   decoration: BoxDecoration(
+//                     shape: BoxShape.circle,
+//                     border: Border.all(
+//                       color: statusColor.withOpacity(0.3 - (_pulseController.value * 0.2)),
+//                       width: 2,
+//                     ),
+//                   ),
+//                 ),
+//               ],
+//
+//               // Progress ring for connecting state
+//               if (isConnecting)
+//                 SizedBox(
+//                   width: 200,
+//                   height: 200,
+//                   child: CircularProgressIndicator(
+//                     value: null,
+//                     strokeWidth: 3,
+//                     valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+//                     backgroundColor: statusColor.withOpacity(0.1),
+//                   ),
+//                 ),
+//
+//               // Main orb with gradient
+//               Container(
+//                 width: 180,
+//                 height: 180,
+//                 decoration: BoxDecoration(
+//                   shape: BoxShape.circle,
+//                   gradient: RadialGradient(
+//                     colors: [
+//                       statusColor.withOpacity(0.8),
+//                       statusColor.withOpacity(0.4),
+//                       statusColor.withOpacity(0.1),
+//                     ],
+//                   ),
+//                   boxShadow: [
+//                     BoxShadow(
+//                       color: statusColor.withOpacity(0.4),
+//                       blurRadius: 40,
+//                       spreadRadius: connected ? 10 : 5,
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//
+//               // Inner glass button
+//               ClipOval(
+//                 child: BackdropFilter(
+//                   filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+//                   child: Container(
+//                     width: 150,
+//                     height: 150,
+//                     decoration: BoxDecoration(
+//                       shape: BoxShape.circle,
+//                       color: AppTheme.getCardColor(context).withOpacity(0.3),
+//                       border: Border.all(
+//                         color: Colors.white.withOpacity(0.2),
+//                         width: 2,
+//                       ),
+//                     ),
+//                     child: Column(
+//                       mainAxisAlignment: MainAxisAlignment.center,
+//                       children: [
+//                         Icon(
+//                           connected
+//                               ? Icons.shield_rounded
+//                               : isConnecting
+//                               ? Icons.vpn_lock_rounded
+//                               : Icons.power_settings_new_rounded,
+//                           color: Colors.white,
+//                           size: 50,
+//                         ),
+//                         const SizedBox(height: 8),
+//                         Text(
+//                           connected
+//                               ? "SECURE"
+//                               : isConnecting
+//                               ? "CONNECTING"
+//                               : "START",
+//                           style: GoogleFonts.poppins(
+//                             color: Colors.white,
+//                             fontWeight: FontWeight.bold,
+//                             fontSize: 14,
+//                             letterSpacing: 2,
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           );
+//         },
+//       ),
+//     );
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Consumer2<VpnConnectionProvider, ServersProvider>(
+//       builder: (context, vpnValue, serversProvider, child) {
+//         final connected = vpnValue.stage?.toString() == "VPNStage.connected";
+//         final isConnecting = vpnValue.stage?.toString() == "VPNStage.connecting" ||
+//             vpnValue.stage?.toString() == "VPNStage.authenticating" ||
+//             vpnValue.stage?.toString() == "VPNStage.reconnecting";
+//
+//         if (connected && _progressController.isAnimating) {
+//           _progressController.stop();
+//           _progressController.reset();
+//         }
+//
+//         return Scaffold(
+//           backgroundColor: AppTheme.getBackgroundColor(context),
+//           body: Stack(
+//             children: [
+//               _buildMeshBackground(),
+//               _buildParticleBackground(connected),
+//               SafeArea(
+//                 child: Column(
+//                   children: [
+//                     // --- HEADER ---
+//                     Padding(
+//                       padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
+//                       child: Row(
+//                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                         children: [
+//                           Row(
+//                             children: [
+//                               Container(
+//                                 padding: const EdgeInsets.all(8),
+//                                 decoration: BoxDecoration(
+//                                   gradient: AppTheme.primaryGradient,
+//                                   borderRadius: BorderRadius.circular(12),
+//                                 ),
+//                                 child: const Icon(Icons.shield, color: Colors.white, size: 24),
+//                               ),
+//                               const SizedBox(width: 12),
+//                               RichText(
+//                                 text: TextSpan(
+//                                   children: [
+//                                     TextSpan(
+//                                       text: "SHIELD ",
+//                                       style: GoogleFonts.poppins(
+//                                         fontSize: 24,
+//                                         fontWeight: FontWeight.w900,
+//                                         color: AppTheme.getTextPrimaryColor(context),
+//                                       ),
+//                                     ),
+//                                     TextSpan(
+//                                       text: "VPN",
+//                                       style: GoogleFonts.poppins(
+//                                         fontSize: 24,
+//                                         fontWeight: FontWeight.w900,
+//                                         color: AppTheme.getPrimaryColor(context),
+//                                       ),
+//                                     ),
+//                                   ],
+//                                 ),
+//                               ),
+//                             ],
+//                           ),
+//                           Container(
+//                             decoration: BoxDecoration(
+//                               color: AppTheme.getCardColor(context).withOpacity(0.5),
+//                               borderRadius: BorderRadius.circular(12),
+//                             ),
+//                             child: IconButton(
+//                               onPressed: () => Navigator.push(
+//                                 context,
+//                                 MaterialPageRoute(builder: (context) => const MoreScreen()),
+//                               ),
+//                               icon: Icon(
+//                                 Icons.settings_suggest_rounded,
+//                                 color: AppTheme.getPrimaryColor(context),
+//                                 size: 26,
+//                               ),
+//                             ),
+//                           ),
+//                         ],
+//                       ),
+//                     ),
+//
+//                     const Spacer(flex: 1),
+//
+//                     // --- STATUS BADGE ---
+//                     AnimatedOpacity(
+//                       duration: const Duration(milliseconds: 600),
+//                       opacity: connected || isConnecting ? 1.0 : 0.0,
+//                       child: Container(
+//                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+//                         decoration: BoxDecoration(
+//                           color: (connected ? AppTheme.connected : AppTheme.connecting).withOpacity(0.15),
+//                           borderRadius: BorderRadius.circular(20),
+//                           border: Border.all(
+//                             color: (connected ? AppTheme.connected : AppTheme.connecting).withOpacity(0.3),
+//                           ),
+//                         ),
+//                         child: Row(
+//                           mainAxisSize: MainAxisSize.min,
+//                           children: [
+//                             Container(
+//                               width: 8,
+//                               height: 8,
+//                               decoration: BoxDecoration(
+//                                 shape: BoxShape.circle,
+//                                 color: connected ? AppTheme.connected : AppTheme.connecting,
+//                                 boxShadow: [
+//                                   BoxShadow(
+//                                     color: (connected ? AppTheme.connected : AppTheme.connecting).withOpacity(0.5),
+//                                     blurRadius: 8,
+//                                     spreadRadius: 2,
+//                                   ),
+//                                 ],
+//                               ),
+//                             ),
+//                             const SizedBox(width: 8),
+//                             Text(
+//                               connected ? "CONNECTED" : "CONNECTING...",
+//                               style: GoogleFonts.poppins(
+//                                 fontSize: 12,
+//                                 fontWeight: FontWeight.bold,
+//                                 color: connected ? AppTheme.connected : AppTheme.connecting,
+//                                 letterSpacing: 1,
+//                               ),
+//                             ),
+//                           ],
+//                         ),
+//                       ),
+//                     ),
+//
+//                     const SizedBox(height: 20),
+//
+//                     // --- SPEED CARDS ---
+//                     AnimatedOpacity(
+//                       duration: const Duration(milliseconds: 600),
+//                       opacity: connected ? 1.0 : 0.0,
+//                       child: Padding(
+//                         padding: const EdgeInsets.symmetric(horizontal: 24),
+//                         child: Row(
+//                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                           children: [
+//                             _buildSpeedCard(
+//                               "UPLOAD",
+//                               formatSpeed(vpnValue.status?.byteOut),
+//                               Icons.arrow_upward_rounded,
+//                               AppTheme.success,
+//                             ),
+//                             _buildSpeedCard(
+//                               "DOWNLOAD",
+//                               formatSpeed(vpnValue.status?.byteIn),
+//                               Icons.arrow_downward_rounded,
+//                               AppTheme.accentLight,
+//                             ),
+//                           ],
+//                         ),
+//                       ),
+//                     ),
+//
+//                     const SizedBox(height: 40),
+//
+//                     // --- CENTER POWER BUTTON ---
+//                     _buildPowerOrb(connected, isConnecting, vpnValue, serversProvider),
+//
+//                     const Spacer(flex: 2),
+//
+//                     // --- SERVER SELECTOR ---
+//                     Padding(
+//                       padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
+//                       child: GestureDetector(
+//                         onTap: () => Navigator.push(
+//                           context,
+//                           MaterialPageRoute(
+//                             builder: (context) => ServerTabs(isConnected: connected),
+//                           ),
+//                         ),
+//                         child: ClipRRect(
+//                           borderRadius: BorderRadius.circular(24),
+//                           child: BackdropFilter(
+//                             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+//                             child: Container(
+//                               padding: const EdgeInsets.all(20),
+//                               decoration: BoxDecoration(
+//                                 color: AppTheme.getCardColor(context).withOpacity(0.4),
+//                                 borderRadius: BorderRadius.circular(24),
+//                                 border: Border.all(
+//                                   color: AppTheme.getPrimaryColor(context).withOpacity(0.3),
+//                                   width: 1.5,
+//                                 ),
+//                                 boxShadow: [
+//                                   BoxShadow(
+//                                     color: AppTheme.getPrimaryColor(context).withOpacity(0.1),
+//                                     blurRadius: 20,
+//                                     spreadRadius: 2,
+//                                   ),
+//                                 ],
+//                               ),
+//                               child: Row(
+//                                 children: [
+//                                   Container(
+//                                     width: 50,
+//                                     height: 50,
+//                                     decoration: BoxDecoration(
+//                                       shape: BoxShape.circle,
+//                                       border: Border.all(
+//                                         color: AppTheme.getPrimaryColor(context).withOpacity(0.3),
+//                                         width: 2,
+//                                       ),
+//                                       boxShadow: [
+//                                         BoxShadow(
+//                                           color: AppTheme.getPrimaryColor(context).withOpacity(0.2),
+//                                           blurRadius: 10,
+//                                         ),
+//                                       ],
+//                                     ),
+//                                     child: ClipOval(
+//                                       child: serversProvider.selectedServer != null
+//                                           ? Image.asset(
+//                                         'assets/flags/${serversProvider.selectedServer!.countryCode.toLowerCase()}.png',
+//                                         fit: BoxFit.cover,
+//                                       )
+//                                           : Container(
+//                                         color: AppTheme.getPrimaryColor(context).withOpacity(0.1),
+//                                         child: Icon(
+//                                           Icons.public,
+//                                           color: AppTheme.getPrimaryColor(context),
+//                                           size: 24,
+//                                         ),
+//                                       ),
+//                                     ),
+//                                   ),
+//                                   const SizedBox(width: 16),
+//                                   Expanded(
+//                                     child: Column(
+//                                       crossAxisAlignment: CrossAxisAlignment.start,
+//                                       children: [
+//                                         Text(
+//                                           "SECURE LOCATION",
+//                                           style: GoogleFonts.poppins(
+//                                             color: AppTheme.getTextSecondaryColor(context),
+//                                             fontSize: 10,
+//                                             fontWeight: FontWeight.w600,
+//                                             letterSpacing: 1,
+//                                           ),
+//                                         ),
+//                                         const SizedBox(height: 4),
+//                                         Text(
+//                                           serversProvider.selectedServer?.country ?? "Select Smart Server",
+//                                           style: GoogleFonts.poppins(
+//                                             color: AppTheme.getTextPrimaryColor(context),
+//                                             fontWeight: FontWeight.bold,
+//                                             fontSize: 16,
+//                                           ),
+//                                         ),
+//                                       ],
+//                                     ),
+//                                   ),
+//                                   Container(
+//                                     padding: const EdgeInsets.all(8),
+//                                     decoration: BoxDecoration(
+//                                       color: AppTheme.getPrimaryColor(context).withOpacity(0.1),
+//                                       borderRadius: BorderRadius.circular(10),
+//                                     ),
+//                                     child: Icon(
+//                                       Icons.arrow_forward_ios_rounded,
+//                                       color: AppTheme.getPrimaryColor(context),
+//                                       size: 18,
+//                                     ),
+//                                   ),
+//                                 ],
+//                               ),
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             ],
+//           ),
+//         );
+//       },
+//     );
+//   }
+// }
+//
+// class ParticlePainter extends CustomPainter {
+//   final List<Particle> particles;
+//   final bool isConnected;
+//   final bool isDark;
+//   final double animationValue;
+//
+//   ParticlePainter({
+//     required this.particles,
+//     required this.isConnected,
+//     required this.isDark,
+//     required this.animationValue,
+//   });
+//
+//   @override
+//   void paint(Canvas canvas, Size size) {
+//     final paint = Paint()..style = PaintingStyle.fill;
+//
+//     // Draw particles
+//     for (var particle in particles) {
+//       final x = particle.x * size.width;
+//       final y = particle.y * size.height;
+//
+//       // Particle color based on connection state
+//       Color particleColor;
+//       if (isConnected) {
+//         particleColor = AppTheme.connected;
+//       } else {
+//         particleColor = isDark ? AppTheme.primaryDark : AppTheme.primaryLight;
+//       }
+//
+//       paint.color = particleColor.withOpacity(particle.opacity * (isConnected ? 0.8 : 0.4));
+//       canvas.drawCircle(Offset(x, y), particle.size, paint);
+//
+//       // Add glow effect for connected state
+//       if (isConnected) {
+//         paint.color = particleColor.withOpacity(particle.opacity * 0.2);
+//         canvas.drawCircle(Offset(x, y), particle.size * 3, paint);
+//       }
+//     }
+//
+//     // Draw connecting lines between nearby particles
+//     if (isConnected) {
+//       final linePaint = Paint()
+//         ..style = PaintingStyle.stroke
+//         ..strokeWidth = 0.5;
+//
+//       for (int i = 0; i < particles.length; i++) {
+//         for (int j = i + 1; j < particles.length; j++) {
+//           final p1 = particles[i];
+//           final p2 = particles[j];
+//
+//           final dx = (p1.x - p2.x) * size.width;
+//           final dy = (p1.y - p2.y) * size.height;
+//           final distance = sqrt(dx * dx + dy * dy);
+//
+//           if (distance < 100) {
+//             final opacity = (1 - distance / 100) * 0.3;
+//             linePaint.color = AppTheme.connected.withOpacity(opacity);
+//             canvas.drawLine(
+//               Offset(p1.x * size.width, p1.y * size.height),
+//               Offset(p2.x * size.width, p2.y * size.height),
+//               linePaint,
+//             );
+//           }
+//         }
+//       }
 //     }
 //   }
 //
 //   @override
-//   bool shouldRepaint(covariant VpnLogoPainter oldDelegate) {
-//     return oldDelegate.progress != progress || oldDelegate.isDarkMode != isDarkMode;
+//   bool shouldRepaint(ParticlePainter oldDelegate) => true;
+// }
+//
+// class _GlowOrb extends StatelessWidget {
+//   final Color color;
+//   const _GlowOrb({required this.color});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       width: 350,
+//       height: 350,
+//       decoration: BoxDecoration(
+//         shape: BoxShape.circle,
+//         color: color,
+//       ),
+//       child: BackdropFilter(
+//         filter: ImageFilter.blur(sigmaX: 90, sigmaY: 90),
+//         child: Container(color: Colors.transparent),
+//       ),
+//     );
 //   }
+// }
+//
+// void showEnhancedDisconnectDialog(BuildContext context, VoidCallback onConfirm) {
+//   showDialog(
+//     context: context,
+//     builder: (c) => BackdropFilter(
+//       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+//       child: AlertDialog(
+//         backgroundColor: AppTheme.getCardColor(context).withOpacity(0.95),
+//         shape: RoundedRectangleBorder(
+//           borderRadius: BorderRadius.circular(28),
+//           side: BorderSide(
+//             color: AppTheme.getPrimaryColor(context).withOpacity(0.2),
+//           ),
+//         ),
+//         title: Row(
+//           children: [
+//             Icon(
+//               Icons.warning_amber_rounded,
+//               color: AppTheme.warning,
+//               size: 28,
+//             ),
+//             const SizedBox(width: 12),
+//             Text(
+//               "Stop Connection?",
+//               style: GoogleFonts.poppins(
+//                 fontWeight: FontWeight.bold,
+//                 fontSize: 18,
+//               ),
+//             ),
+//           ],
+//         ),
+//         content: Text(
+//           "Are you sure you want to disconnect from this secure server?",
+//           style: GoogleFonts.poppins(
+//             fontSize: 14,
+//             color: AppTheme.getTextSecondaryColor(context),
+//           ),
+//         ),
+//         actions: [
+//           TextButton(
+//             onPressed: () => Navigator.pop(c),
+//             child: Text(
+//               "CANCEL",
+//               style: GoogleFonts.poppins(
+//                 color: AppTheme.getTextSecondaryColor(context),
+//                 fontWeight: FontWeight.w600,
+//               ),
+//             ),
+//           ),
+//           ElevatedButton(
+//             style: ElevatedButton.styleFrom(
+//               backgroundColor: AppTheme.error,
+//               shape: RoundedRectangleBorder(
+//                 borderRadius: BorderRadius.circular(12),
+//               ),
+//               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+//             ),
+//             onPressed: () {
+//               Navigator.pop(c);
+//               onConfirm();
+//             },
+//             child: Text(
+//               "DISCONNECT",
+//               style: GoogleFonts.poppins(
+//                 color: Colors.white,
+//                 fontWeight: FontWeight.bold,
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     ),
+//   );
 // }
