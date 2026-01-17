@@ -67,7 +67,14 @@ Future<void> initializeAdsAndConsent() async {
   adsController.preloadInterstitial();
   adsController.loadBanner2();
   adsController.loadBanner();
+  try {
+    final serversProvider = ServersProvider();
+    await serversProvider.getServers();
+  } catch (e) {
+    debugPrint("Failed to fetch servers during initialization: $e");
+  }
 }
+
 
 /// ✅ Dispatcher that Workmanager calls
 @pragma('vm:entry-point')

@@ -62,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _drawerIconController;
   late AnimationController _buttonPressController;
   late AnimationController _buttonMoveController;
-
+  late AnimationController _borderAnimationController;
   final AdsController adsController = Get.find();
   List<Particle> particles = [];
 
@@ -106,12 +106,29 @@ class _HomeScreenState extends State<HomeScreen>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
+    _borderAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
     _initializeParticles();
 
+
+    // ✅ THIS IS THE KEY - FROM YOUR WORKING CODE
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _connectivitySubscription = Connectivity().onConnectivityChanged.listen(_updateConnectionStatus);
-      await Provider.of<ServersProvider>(context, listen: false).initialize();
+
+      final serversProvider = Provider.of<ServersProvider>(context, listen: false);
+      await serversProvider.initialize();
+
+      // ✅ FETCH SERVERS HERE - THIS IS WHAT WAS MISSING
+      if (serversProvider.freeServers.isEmpty) {
+        await serversProvider.getServers();
+      }
+
       _loadAppState();
+
+      final vpnConnectionProvider = Provider.of<VpnConnectionProvider>(context, listen: false);
+      await vpnConnectionProvider.restoreVpnState();
     });
   }
 
@@ -333,6 +350,7 @@ class _HomeScreenState extends State<HomeScreen>
     _buttonPressController.dispose();
     _connectivitySubscription?.cancel();
     _buttonMoveController.dispose();
+    _borderAnimationController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -465,17 +483,6 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
 
-  Color _getDarkerPrimaryColor(bool connected) {
-    if (connected) return const Color(0xFF10B981); // Keep original green
-    final isDark = AppTheme.isDarkMode(context);
-    return isDark ? AppTheme.primaryDark : AppTheme.primaryLight; // Keep original
-  }
-
-  Color _getButtonColor(bool connected, bool isConnecting) {
-    if (connected) return const Color(0xFF047857); // DARK GREEN for button
-    if (isConnecting) return const Color(0xFFD97706); // DARK ORANGE for button
-    return const Color(0xFF1D4ED8); // DARK BLUE for button
-  }
 
   Widget _buildPowerOrb(bool connected, bool isConnecting, VpnConnectionProvider vpnValue, ServersProvider serversProvider) {
     final isDark = AppTheme.isDarkMode(context);
@@ -512,9 +519,32 @@ class _HomeScreenState extends State<HomeScreen>
             showLogoToast("Disconnected", color: AppTheme.error);
           });
         } else if (!isConnecting) {
+          // ✅ CHECK IF SERVERS ARE LOADED
+          if (serversProvider.freeServers.isEmpty) {
+            showLogoToast("Loading servers...", color: AppTheme.warning);
+            await serversProvider.getServers();
+          }
+
           if (serversProvider.selectedServer == null) {
             return showLogoToast("Please select a server", color: AppTheme.error);
           }
+
+          // ✅ VERIFY OVPN CONFIG EXISTS
+          if (serversProvider.selectedServer!.ovpn.isEmpty) {
+            showLogoToast("Server config missing, retrying...", color: AppTheme.warning);
+
+            // ✅ FORCE REFRESH - Call getServers again which will refetch
+            await serversProvider.getServers();
+
+            // Check again after refresh
+            if (serversProvider.selectedServer == null ||
+                serversProvider.selectedServer!.ovpn.isEmpty) {
+              return showLogoToast("Server data unavailable", color: AppTheme.error);
+            }
+          }
+
+          debugPrint('🔵 Connecting to: ${serversProvider.selectedServer!.country}');
+          debugPrint('🔵 OVPN config length: ${serversProvider.selectedServer!.ovpn.length}');
 
           setState(() => _isLoading = true);
           _progressController.repeat();
@@ -689,6 +719,7 @@ class _HomeScreenState extends State<HomeScreen>
             _buttonMoveController.reverse();
           });
         }
+
         // Reset loading when connected
         if (connected) {
           if (_progressController.isAnimating) {
@@ -700,6 +731,12 @@ class _HomeScreenState extends State<HomeScreen>
               if (mounted) setState(() => _isLoading = false);
             });
           }
+        }
+        if (connected && !_borderAnimationController.isAnimating) {
+          _borderAnimationController.repeat();
+        } else if (!connected && _borderAnimationController.isAnimating) {
+          _borderAnimationController.stop();
+          _borderAnimationController.reset();
         }
 
         return Scaffold(
@@ -783,6 +820,9 @@ class _HomeScreenState extends State<HomeScreen>
                       },
                     ),
                     SizedBox(height: MediaQuery.of(context).size.height * 0.03),                    // --- SERVER SELECTOR ---
+                    // SIMPLE COLOR CHANGE - NO REPEATING ANIMATION
+// Replace your server selector
+
                     Padding(
                       padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
                       child: GestureDetector(
@@ -796,18 +836,24 @@ class _HomeScreenState extends State<HomeScreen>
                           borderRadius: BorderRadius.circular(24),
                           child: BackdropFilter(
                             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                            child: Container(
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 800),
+                              curve: Curves.easeInOut,
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
                                 color: AppTheme.getCardColor(context).withOpacity(0.4),
                                 borderRadius: BorderRadius.circular(24),
                                 border: Border.all(
-                                  color: AppTheme.getPrimaryColor(context).withOpacity(0.3),
+                                  color: connected
+                                      ? AppTheme.connected.withOpacity(0.3)
+                                      : AppTheme.getPrimaryColor(context).withOpacity(0.3),
                                   width: 1.5,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppTheme.getPrimaryColor(context).withOpacity(0.1),
+                                    color: connected
+                                        ? AppTheme.connected.withOpacity(0.1)
+                                        : AppTheme.getPrimaryColor(context).withOpacity(0.1),
                                     blurRadius: 20,
                                     spreadRadius: 2,
                                   ),
@@ -821,7 +867,9 @@ class _HomeScreenState extends State<HomeScreen>
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                        color: AppTheme.getPrimaryColor(context).withOpacity(0.3),
+                                        color: connected
+                                            ? AppTheme.connected.withOpacity(0.6)
+                                            : AppTheme.getPrimaryColor(context).withOpacity(0.3),
                                         width: 2,
                                       ),
                                       boxShadow: [
@@ -836,12 +884,16 @@ class _HomeScreenState extends State<HomeScreen>
                                           ? Image.asset(
                                         'assets/flags/${serversProvider.selectedServer!.countryCode.toLowerCase()}.png',
                                         fit: BoxFit.cover,
+                                        cacheWidth: 100,
+                                        cacheHeight: 100,
                                       )
                                           : Container(
-                                        color: AppTheme.getPrimaryColor(context).withOpacity(0.1),
+                                        color: connected
+                                            ? AppTheme.connected.withOpacity(0.1)
+                                            : AppTheme.getPrimaryColor(context).withOpacity(0.1),
                                         child: Icon(
                                           Icons.public,
-                                          color: AppTheme.getPrimaryColor(context),
+                                          color: connected ? AppTheme.connected : AppTheme.getPrimaryColor(context),
                                           size: 24,
                                         ),
                                       ),
@@ -876,12 +928,14 @@ class _HomeScreenState extends State<HomeScreen>
                                   Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.getPrimaryColor(context).withOpacity(0.1),
+                                      color: connected
+                                          ? AppTheme.connected.withOpacity(0.2)
+                                          : AppTheme.getPrimaryColor(context).withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Icon(
                                       Icons.arrow_forward_ios_rounded,
-                                      color: AppTheme.getPrimaryColor(context),
+                                      color: connected ? AppTheme.connected : AppTheme.getPrimaryColor(context),
                                       size: 18,
                                     ),
                                   ),
@@ -891,7 +945,7 @@ class _HomeScreenState extends State<HomeScreen>
                           ),
                         ),
                       ),
-                    ),
+                    )
                   ],
                 ),
               ),

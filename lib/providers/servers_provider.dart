@@ -59,14 +59,14 @@ class ServersProvider with ChangeNotifier {
         selectedIndex = savedIndex;
         selectedTab = savedTab;
         _hasPreferenceServer = true;
-        debugPrint('Loaded saved server: ${_selectedServer!.country}');
+        debugPrint('✅ Loaded saved server: ${_selectedServer!.country}');
       } else {
-        debugPrint('No saved server found in preferences');
+        debugPrint('ℹ️ No saved server found in preferences');
         _selectedServer = null;
         _hasPreferenceServer = false;
       }
     } catch (e) {
-      debugPrint('Error loading selected server: $e');
+      debugPrint('❌ Error loading selected server: $e');
       _selectedServer = null;
       _hasPreferenceServer = false;
     }
@@ -81,10 +81,10 @@ class ServersProvider with ChangeNotifier {
         await Prefs.setInt(_selectedIndexKey, selectedIndex);
         await Prefs.setString(_selectedTabKey, selectedTab);
         _hasPreferenceServer = true;
-        debugPrint('Saved server: ${_selectedServer!.country}');
+        debugPrint('✅ Saved server: ${_selectedServer!.country}');
       }
     } catch (e) {
-      debugPrint('Error saving selected server: $e');
+      debugPrint('❌ Error saving selected server: $e');
     }
   }
 
@@ -122,6 +122,7 @@ class ServersProvider with ChangeNotifier {
     notifyListeners();
   }
 
+
   Future<void> getServers() async {
     try {
       areServersLoading = true;
@@ -156,6 +157,12 @@ class ServersProvider with ChangeNotifier {
     if (_freeServers.isEmpty) {
       notifyListeners();
       return;
+    }
+    debugPrint('📦 Setting ${_freeServers.length} free servers');
+    if (_freeServers.isNotEmpty) {
+      debugPrint('📦 First server: ${_freeServers.first.country}');
+      debugPrint('📦 First server OVPN length: ${_freeServers.first.ovpn.length}');
+      debugPrint('📦 First server username: ${_freeServers.first.username}');
     }
 
     // 🔁 Try to restore previously selected server

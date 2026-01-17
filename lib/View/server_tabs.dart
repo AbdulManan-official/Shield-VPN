@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:vpnprowithjava/View/Widgets/recommended_server_screen.dart';
-import 'package:vpnprowithjava/utils/app_theme.dart'; // ✅ IMPORTED THEME
+import 'package:vpnprowithjava/utils/app_theme.dart';
 
 import '../../providers/servers_provider.dart';
 import 'Widgets/servers_screen.dart';
@@ -19,7 +19,6 @@ class _ServerTabsState extends State<ServerTabs> {
   @override
   void initState() {
     super.initState();
-    // Ensure provider is initialized when this screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = Provider.of<ServersProvider>(context, listen: false);
       if (!provider.isInitialized) {
@@ -34,22 +33,22 @@ class _ServerTabsState extends State<ServerTabs> {
       builder: (context, value, child) => DefaultTabController(
         length: 2,
         child: Scaffold(
+          backgroundColor: AppTheme.getBackgroundColor(context),
           appBar: AppBar(
             backgroundColor: AppTheme.getBackgroundColor(context),
+            elevation: 0,
             leading: IconButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
               icon: Icon(
-                Icons.arrow_back_ios_new,
+                Icons.arrow_back,
                 color: AppTheme.getTextPrimaryColor(context),
               ),
             ),
             title: Text(
-              'Select Country',
+              'Available Server',
               style: GoogleFonts.poppins(
                 fontSize: 20,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.bold,
                 color: AppTheme.getTextPrimaryColor(context),
               ),
             ),
@@ -57,25 +56,22 @@ class _ServerTabsState extends State<ServerTabs> {
               indicatorColor: widget.isConnected
                   ? AppTheme.connected
                   : AppTheme.getPrimaryColor(context),
+              indicatorWeight: 3,
               labelColor: widget.isConnected
                   ? AppTheme.connected
                   : AppTheme.getPrimaryColor(context),
               unselectedLabelColor: AppTheme.getTextSecondaryColor(context),
               labelStyle: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
               ),
               unselectedLabelStyle: GoogleFonts.poppins(
                 fontWeight: FontWeight.w500,
-                fontSize: 13,
+                fontSize: 14,
               ),
               tabs: const [
-                Tab(
-                  text: 'ALL LOCATIONS',
-                ),
-                Tab(
-                  text: 'RECOMMENDED',
-                ),
+                Tab(text: 'LOCATIONS'),
+                Tab(text: 'RECOMMENDED'),
               ],
             ),
           ),
@@ -83,7 +79,7 @@ class _ServerTabsState extends State<ServerTabs> {
             children: [
               ServersScreen(
                 servers: value.freeServers,
-                tab: "All Locations",
+                tab: "Locations",
                 isConnected: widget.isConnected,
               ),
               RecommendedServer(
