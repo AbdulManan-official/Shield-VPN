@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:vpnprowithjava/View/premium_access_screen.dart';
-import 'package:vpnprowithjava/View/subscription_manager.dart';
+import 'package:vpnsheild/View/premium_access_screen.dart';
+import 'package:vpnsheild/View/subscription_manager.dart';
 
 import '../providers/ads_controller.dart';
 import '../utils/app_theme.dart';

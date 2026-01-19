@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:openvpn_flutter/openvpn_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:vpnprowithjava/View/Widgets/internet_connection_manager.dart';
-import 'package:vpnprowithjava/utils/app_theme.dart';
+import 'package:vpnsheild/View/Widgets/internet_connection_manager.dart';
+import 'package:vpnsheild/utils/app_theme.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
 

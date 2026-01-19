@@ -3,8 +3,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:vpnprowithjava/utils/custom_toast.dart';
-import 'package:vpnprowithjava/utils/app_theme.dart'; // ✅ IMPORTED THEME!
+import 'package:vpnsheild/utils/custom_toast.dart';
+import 'package:vpnsheild/utils/app_theme.dart'; // ✅ IMPORTED THEME!
 
 class InternetConnectionManager {
   static final Connectivity _connectivity = Connectivity();

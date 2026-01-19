@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:vpnprowithjava/utils/preferences.dart';
+import 'package:vpnsheild/utils/preferences.dart';
 
 class AdBannerWidget extends StatefulWidget {
   final String adUnitId;

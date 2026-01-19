@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:vpnprowithjava/View/Widgets/recommended_server_screen.dart';
-import 'package:vpnprowithjava/utils/app_theme.dart';
+import 'package:vpnsheild/View/Widgets/recommended_server_screen.dart';
+import 'package:vpnsheild/utils/app_theme.dart';
 
 import '../../providers/servers_provider.dart';
 import 'Widgets/servers_screen.dart';

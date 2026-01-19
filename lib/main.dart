@@ -10,15 +10,15 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:openvpn_flutter/openvpn_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vpnprowithjava/View/splash_screen.dart';
-import 'package:vpnprowithjava/providers/ads_controller.dart';
-import 'package:vpnprowithjava/providers/apps_provider.dart';
-import 'package:vpnprowithjava/providers/device_detail_provider.dart';
-import 'package:vpnprowithjava/providers/servers_provider.dart';
-import 'package:vpnprowithjava/providers/vpn_connection_provider.dart';
-import 'package:vpnprowithjava/providers/vpn_provider.dart';
-import 'package:vpnprowithjava/utils/preferences.dart';
-import 'package:vpnprowithjava/utils/app_theme.dart'; // ✅ Import new theme
+import 'package:vpnsheild/View/splash_screen.dart';
+import 'package:vpnsheild/providers/ads_controller.dart';
+import 'package:vpnsheild/providers/apps_provider.dart';
+import 'package:vpnsheild/providers/device_detail_provider.dart';
+import 'package:vpnsheild/providers/servers_provider.dart';
+import 'package:vpnsheild/providers/vpn_connection_provider.dart';
+import 'package:vpnsheild/providers/vpn_provider.dart';
+import 'package:vpnsheild/utils/preferences.dart';
+import 'package:vpnsheild/utils/app_theme.dart'; // ✅ Import new theme
 import 'package:workmanager/workmanager.dart';
 
 import 'View/subscription_manager.dart';
