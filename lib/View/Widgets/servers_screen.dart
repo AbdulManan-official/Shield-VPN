@@ -144,19 +144,26 @@ class _ServersScreenState extends State<ServersScreen> {
     if (isConnected || isConnecting) {
       showCancelConfirmationDialog(
         context,
-        onConfirm: () {
+        onConfirm: () async { // ✅ Make it async
           controller.setSelectedIndex(serverIndex);
           controller.setSelectedTab(widget.tab);
           controller.setSelectedServer(server);
           vpnConfigProvider.vpnConfig = VpnConfig.fromJson(server.toJson());
-          vpnProvider.engine.disconnect();
 
-          Navigator.of(context).pop();
-          ToastHelper.showSuccess(
-            '${server.country} selected',
-            logoStr: 'assets/flags/${server.countryCode.toLowerCase()}.png',
-          );
-          Navigator.of(context).pop();
+          // ✅ PROPERLY DISCONNECT AND WAIT
+          await vpnProvider.disconnect(); // Use disconnect() method instead of engine.disconnect()
+
+          // ✅ ADD SMALL DELAY
+          await Future.delayed(const Duration(milliseconds: 500));
+
+          if (mounted) {
+            Navigator.of(context).pop();
+            ToastHelper.showSuccess(
+              '${server.country} selected',
+              logoStr: 'assets/flags/${server.countryCode.toLowerCase()}.png',
+            );
+            Navigator.of(context).pop();
+          }
         },
       );
     } else {

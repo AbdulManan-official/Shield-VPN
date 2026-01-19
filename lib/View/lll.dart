@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
-
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -54,8 +53,8 @@ class _HomeScreenState extends State<HomeScreen>
   bool _isLoading = false;
   bool _isConnected = false;
   bool _isButtonPressed = false;
-  late AnimationController _serverPressController;
 
+  late AnimationController _serverPressController;
   late AnimationController _pulseController;
   late AnimationController _meshController;
   late AnimationController _particleController;
@@ -64,13 +63,14 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _buttonPressController;
   late AnimationController _buttonMoveController;
   late AnimationController _borderAnimationController;
-  final AdsController adsController = Get.find();
+  late AnimationController _glowController;
+
+  final AdsController adsController = Get.find<AdsController>();
   List<Particle> particles = [];
 
   @override
   void initState() {
     super.initState();
-
     adsController.loadBanner();
     WidgetsBinding.instance.addObserver(this);
 
@@ -114,52 +114,63 @@ class _HomeScreenState extends State<HomeScreen>
       duration: const Duration(milliseconds: 1500),
     );
 
+    _glowController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+
+    _initializeParticles();
+
     _serverPressController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 100),
     );
 
-    _initializeParticles();
-
-    // ✅ THIS IS THE CORRECT WAY
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      _connectivitySubscription = Connectivity().onConnectivityChanged.listen(_updateConnectionStatus);
+      _connectivitySubscription =
+          Connectivity().onConnectivityChanged.listen(_updateConnectionStatus);
 
       final serversProvider = Provider.of<ServersProvider>(context, listen: false);
       await serversProvider.initialize();
-
       if (serversProvider.freeServers.isEmpty) {
         await serversProvider.getServers();
       }
-
       _loadAppState();
 
-      final vpnConnectionProvider = Provider.of<VpnConnectionProvider>(context, listen: false);
+      final vpnConnectionProvider =
+      Provider.of<VpnConnectionProvider>(context, listen: false);
       await vpnConnectionProvider.restoreVpnState();
 
-      // ✅ Add listener here (INSIDE addPostFrameCallback)
       vpnConnectionProvider.addListener(() {
         if (!mounted) return;
-
         final stage = vpnConnectionProvider.stage;
         debugPrint('🔴 VPN Stage Changed: $stage');
 
         if (stage == VPNStage.disconnected || stage == VPNStage.error) {
-          if (mounted && _isLoading) {
-            setState(() => _isLoading = false);
-            _progressController.stop();
-            _progressController.reset();
-
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+            if (_progressController.isAnimating) {
+              _progressController.stop();
+              _progressController.reset();
+            }
             if (stage == VPNStage.error) {
               showLogoToast("Connection failed", color: AppTheme.error);
             }
           }
         }
 
-        if (stage == VPNStage.connected && mounted && _isLoading) {
-          setState(() => _isLoading = false);
-          _progressController.stop();
-          _progressController.reset();
+        if (stage == VPNStage.connected) {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+            if (_progressController.isAnimating) {
+              _progressController.stop();
+              _progressController.reset();
+            }
+          }
         }
       });
     });
@@ -178,62 +189,93 @@ class _HomeScreenState extends State<HomeScreen>
       ));
     }
   }
-  Widget _buildConnectionStatus(bool connected, bool isConnecting, VpnConnectionProvider vpnValue) {
+
+  Widget _buildConnectionStatus(
+      bool connected, bool isConnecting, VpnConnectionProvider vpnValue) {
     return AnimatedSize(
-      duration: const Duration(milliseconds: 2000),  // Match button animation duration
+      duration: const Duration(milliseconds: 2000),
       curve: Curves.easeInOut,
       child: (!connected && !isConnecting)
           ? const SizedBox.shrink()
           : Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Connection Status Badge
+          // Enhanced Connection Status Badge with gradient
           Container(
             margin: const EdgeInsets.only(top: 18),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             decoration: BoxDecoration(
-              color: (connected ? AppTheme.connected : AppTheme.connecting)
-                  .withOpacity(0.15),
-              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                colors: connected
+                    ? [
+                  AppTheme.connected.withOpacity(0.2),
+                  AppTheme.connected.withOpacity(0.1),
+                ]
+                    : [
+                  AppTheme.connecting.withOpacity(0.2),
+                  AppTheme.connecting.withOpacity(0.1),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: (connected ? AppTheme.connected : AppTheme.connecting)
-                    .withOpacity(0.3),
+                    .withOpacity(0.4),
+                width: 1.5,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: (connected ? AppTheme.connected : AppTheme.connecting)
+                      .withOpacity(0.2),
+                  blurRadius: 12,
+                  spreadRadius: 0,
+                ),
+              ],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: connected ? AppTheme.connected : AppTheme.connecting,
-                    boxShadow: [
-                      BoxShadow(
-                        color: (connected ? AppTheme.connected : AppTheme.connecting)
-                            .withOpacity(0.5),
-                        blurRadius: 8,
-                        spreadRadius: 2,
+                AnimatedBuilder(
+                  animation: _pulseController,
+                  builder: (context, child) {
+                    return Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: connected
+                            ? AppTheme.connected
+                            : AppTheme.connecting,
+                        boxShadow: [
+                          BoxShadow(
+                            color: (connected
+                                ? AppTheme.connected
+                                : AppTheme.connecting)
+                                .withOpacity(0.6 + _pulseController.value * 0.4),
+                            blurRadius: 8 + _pulseController.value * 4,
+                            spreadRadius: 2 + _pulseController.value * 2,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Text(
                   connected ? "CONNECTED" : "CONNECTING...",
                   style: GoogleFonts.poppins(
                     fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                     color: connected ? AppTheme.connected : AppTheme.connecting,
-                    letterSpacing: 1,
+                    letterSpacing: 1.2,
                   ),
                 ),
               ],
             ),
           ),
 
-          // Speed Section (only show when connected) with smooth animation
+          // Enhanced Speed Section
           AnimatedSize(
             duration: const Duration(milliseconds: 2000),
             curve: Curves.easeInOut,
@@ -241,18 +283,28 @@ class _HomeScreenState extends State<HomeScreen>
                 ? Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(24),
                     child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 20),
                         decoration: BoxDecoration(
-                          color: AppTheme.getCardColor(context).withOpacity(0.4),
-                          borderRadius: BorderRadius.circular(20),
+                          gradient: LinearGradient(
+                            colors: [
+                              AppTheme.getCardColor(context)
+                                  .withOpacity(0.5),
+                              AppTheme.getCardColor(context)
+                                  .withOpacity(0.3),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(24),
                           border: Border.all(
                             color: AppTheme.connected.withOpacity(0.3),
                             width: 1.5,
@@ -260,102 +312,52 @@ class _HomeScreenState extends State<HomeScreen>
                           boxShadow: [
                             BoxShadow(
                               color: AppTheme.connected.withOpacity(0.1),
-                              blurRadius: 20,
-                              spreadRadius: 2,
+                              blurRadius: 24,
+                              spreadRadius: 0,
                             ),
                           ],
                         ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          mainAxisAlignment:
+                          MainAxisAlignment.spaceAround,
                           children: [
                             // UPLOAD
                             Expanded(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.success.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Icon(Icons.arrow_upward_rounded, color: AppTheme.success, size: 20),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        "UPLOAD",
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 10,
-                                          color: AppTheme.getTextSecondaryColor(context),
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: 0.5,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        formatSpeed(vpnValue.status?.byteOut),
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 14,
-                                          color: AppTheme.getTextPrimaryColor(context),
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                              child: _buildSpeedIndicator(
+                                icon: Icons.arrow_upward_rounded,
+                                label: "UPLOAD",
+                                value: formatSpeed(vpnValue.status?.byteOut),
+                                color: AppTheme.success,
                               ),
                             ),
 
                             // DIVIDER
                             Container(
-                              height: 40,
+                              height: 50,
                               width: 1.5,
-                              color: AppTheme.getPrimaryColor(context).withOpacity(0.2),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AppTheme.getPrimaryColor(context)
+                                        .withOpacity(0.0),
+                                    AppTheme.getPrimaryColor(context)
+                                        .withOpacity(0.3),
+                                    AppTheme.getPrimaryColor(context)
+                                        .withOpacity(0.0),
+                                  ],
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                ),
+                              ),
                             ),
 
                             // DOWNLOAD
                             Expanded(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.accentLight.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Icon(Icons.arrow_downward_rounded, color: AppTheme.accentLight, size: 20),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        "DOWNLOAD",
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 10,
-                                          color: AppTheme.getTextSecondaryColor(context),
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: 0.5,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        formatSpeed(vpnValue.status?.byteIn),
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 14,
-                                          color: AppTheme.getTextPrimaryColor(context),
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                              child: _buildSpeedIndicator(
+                                icon: Icons.arrow_downward_rounded,
+                                label: "DOWNLOAD",
+                                value: formatSpeed(vpnValue.status?.byteIn),
+                                color: AppTheme.accentLight,
                               ),
                             ),
                           ],
@@ -373,6 +375,63 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
+  Widget _buildSpeedIndicator({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                color.withOpacity(0.2),
+                color.withOpacity(0.05),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: color.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Icon(icon, color: color, size: 22),
+        ),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 9,
+                color: AppTheme.getTextSecondaryColor(context),
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.8,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                color: AppTheme.getTextPrimaryColor(context),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   @override
   void dispose() {
     _pulseController.dispose();
@@ -385,6 +444,7 @@ class _HomeScreenState extends State<HomeScreen>
     _connectivitySubscription?.cancel();
     _buttonMoveController.dispose();
     _borderAnimationController.dispose();
+    _glowController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -406,18 +466,14 @@ class _HomeScreenState extends State<HomeScreen>
     return "${((b * 8) / 1000000).toStringAsFixed(1)} Mbps";
   }
 
-  // --- UI COMPONENTS ---
-
   Widget _buildParticleBackground(bool isConnected) {
     return AnimatedBuilder(
       animation: _particleController,
       builder: (context, child) {
-        // Update particle positions
         for (var particle in particles) {
           particle.x += particle.vx;
           particle.y += particle.vy;
 
-          // Wrap around edges
           if (particle.x < 0) particle.x = 1;
           if (particle.x > 1) particle.x = 0;
           if (particle.y < 0) particle.y = 1;
@@ -436,92 +492,32 @@ class _HomeScreenState extends State<HomeScreen>
       },
     );
   }
+
   Widget _buildMeshBackground() {
     final isDark = AppTheme.isDarkMode(context);
-
     return AnimatedContainer(
       duration: const Duration(milliseconds: 800),
       decoration: BoxDecoration(
-        color: _isConnected
-            ? const Color(0xFF10B981).withOpacity(isDark ? 0.15 : 0.08)  // GREEN when connected
-            : const Color(0xFF1D4ED8).withOpacity(isDark ? 0.15 : 0.08), // BLUE when disconnected
-      ),
-    );
-
-  }
-
-
-  Widget _buildSpeedCard(String label, String value, IconData icon, Color color) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          width: MediaQuery.of(context).size.width * 0.42,
-          padding: const EdgeInsets.symmetric( vertical: 20),
-          decoration: BoxDecoration(
-            color: AppTheme.getCardColor(context).withOpacity(0.4),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: color.withOpacity(0.3), width: 1.5),
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.1),
-                blurRadius: 20,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(icon, color: color, size: 22),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    label,
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      color: AppTheme.getTextSecondaryColor(context),
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              AutoSizeText(
-                value,
-                maxLines: 1,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  color: AppTheme.getTextPrimaryColor(context),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
+        gradient: LinearGradient(
+          colors: _isConnected
+              ? [
+            const Color(0xFF10B981).withOpacity(isDark ? 0.15 : 0.08),
+            const Color(0xFF059669).withOpacity(isDark ? 0.10 : 0.05),
+          ]
+              : [
+            const Color(0xFF1D4ED8).withOpacity(isDark ? 0.15 : 0.08),
+            const Color(0xFF2563EB).withOpacity(isDark ? 0.10 : 0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
       ),
     );
   }
 
-
-
-  Widget _buildPowerOrb(bool connected, bool isConnecting, VpnConnectionProvider vpnValue, ServersProvider serversProvider) {
+  Widget _buildPowerOrb(bool connected, bool isConnecting,
+      VpnConnectionProvider vpnValue, ServersProvider serversProvider) {
     final isDark = AppTheme.isDarkMode(context);
-
-    // Button color based on state and theme
     final statusColor = connected
         ? AppTheme.connected
         : (isConnecting
@@ -550,51 +546,53 @@ class _HomeScreenState extends State<HomeScreen>
             await vpnValue.disconnect();
             setState(() {
               _isConnected = false;
-              _isLoading = false; // ✅ ADD THIS
+              _isLoading = false;
             });
             _progressController.reset();
             showLogoToast("Disconnected", color: AppTheme.error);
           });
         } else if (!isConnecting) {
-          // Check if servers are loaded
           if (serversProvider.freeServers.isEmpty) {
             showLogoToast("Loading servers...", color: AppTheme.warning);
             await serversProvider.getServers();
           }
 
           if (serversProvider.selectedServer == null) {
-            return showLogoToast("Please select a server", color: AppTheme.error);
+            return showLogoToast("Please select a server",
+                color: AppTheme.error);
           }
 
-          // Verify OVPN config exists
           if (serversProvider.selectedServer!.ovpn.isEmpty) {
-            showLogoToast("Server config missing, retrying...", color: AppTheme.warning);
+            showLogoToast("Server config missing, retrying...",
+                color: AppTheme.warning);
             await serversProvider.getServers();
-
             if (serversProvider.selectedServer == null ||
                 serversProvider.selectedServer!.ovpn.isEmpty) {
-              return showLogoToast("Server data unavailable", color: AppTheme.error);
+              return showLogoToast("Server data unavailable",
+                  color: AppTheme.error);
             }
           }
 
-          debugPrint('🔵 Connecting to: ${serversProvider.selectedServer!.country}');
-          debugPrint('🔵 OVPN config length: ${serversProvider.selectedServer!.ovpn.length}');
+          debugPrint(
+              '🔵 Connecting to: ${serversProvider.selectedServer!.country}');
+          debugPrint(
+              '🔵 OVPN config length: ${serversProvider.selectedServer!.ovpn.length}');
 
           setState(() => _isLoading = true);
           _progressController.repeat();
 
-          // ✅ ADD CONNECTION TIMEOUT
           Future.delayed(const Duration(seconds: 30), () {
             if (mounted && _isLoading && !connected) {
               setState(() => _isLoading = false);
               _progressController.stop();
               _progressController.reset();
-              showLogoToast("Connection timeout - Please try again", color: AppTheme.error);
+              showLogoToast("Connection timeout - Please try again",
+                  color: AppTheme.error);
             }
           });
 
           adsController.showInterstitial();
-          final AppsController apps = Get.find();
+          final AppsController apps = Get.find<AppsController>();
           vpnValue.initPlatformState(
             serversProvider.selectedServer!.ovpn,
             serversProvider.selectedServer!.country,
@@ -605,27 +603,40 @@ class _HomeScreenState extends State<HomeScreen>
         }
       },
       child: AnimatedBuilder(
-        animation: Listenable.merge([_pulseController, _progressController, _buttonPressController]),
+        animation: Listenable.merge(
+            [_pulseController, _progressController, _buttonPressController, _glowController]),
         builder: (context, child) {
           final pressScale = 1.0 - (_buttonPressController.value * 0.05);
-
           return Transform.scale(
             scale: pressScale,
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Outer pulse rings
+                // Enhanced outer pulse rings with gradient
                 if (connected) ...[
-                  Container(
-                    width: 240 + (_pulseController.value * 20),
-                    height: 240 + (_pulseController.value * 20),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: statusColor.withOpacity(0.2 - (_pulseController.value * 0.15)),
-                        width: 2,
-                      ),
-                    ),
+                  AnimatedBuilder(
+                    animation: _glowController,
+                    builder: (context, child) {
+                      return Container(
+                        width: 240 + (_pulseController.value * 20),
+                        height: 240 + (_pulseController.value * 20),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              statusColor.withOpacity(0.0),
+                              statusColor.withOpacity(
+                                  0.15 - (_pulseController.value * 0.1)),
+                            ],
+                          ),
+                          border: Border.all(
+                            color: statusColor.withOpacity(
+                                0.2 - (_pulseController.value * 0.15)),
+                            width: 2,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   Container(
                     width: 210 + (_pulseController.value * 15),
@@ -633,14 +644,15 @@ class _HomeScreenState extends State<HomeScreen>
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: statusColor.withOpacity(0.3 - (_pulseController.value * 0.2)),
+                        color: statusColor
+                            .withOpacity(0.3 - (_pulseController.value * 0.2)),
                         width: 2,
                       ),
                     ),
                   ),
                 ],
 
-                // Progress ring for connecting state
+                // Enhanced progress ring
                 if (isConnecting)
                   SizedBox(
                     width: 200,
@@ -648,36 +660,54 @@ class _HomeScreenState extends State<HomeScreen>
                     child: CircularProgressIndicator(
                       value: null,
                       strokeWidth: 3,
-                      valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                      valueColor: AlwaysStoppedAnimation(statusColor),
                       backgroundColor: statusColor.withOpacity(0.1),
                     ),
                   ),
 
-                // Main orb - FILLED WITH THEME COLORS
+                // Enhanced main orb with gradient and shadow
                 Container(
                   width: 180,
                   height: 180,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: statusColor, // SOLID THEME COLOR
+                    gradient: RadialGradient(
+                      colors: [
+                        statusColor,
+                        statusColor.withOpacity(0.8),
+                      ],
+                      center: Alignment(-0.3, -0.3),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: statusColor.withOpacity(0.6),
                         blurRadius: 50,
                         spreadRadius: connected ? 15 : 8,
                       ),
+                      BoxShadow(
+                        color: statusColor.withOpacity(0.3),
+                        blurRadius: 80,
+                        spreadRadius: connected ? 25 : 15,
+                      ),
                     ],
                   ),
                 ),
 
+                // Inner orb with border
                 Container(
                   width: 150,
                   height: 150,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: statusColor.withOpacity(0.9), // Slightly transparent for depth
+                    gradient: RadialGradient(
+                      colors: [
+                        statusColor.withOpacity(0.95),
+                        statusColor.withOpacity(0.85),
+                      ],
+                      center: Alignment(-0.2, -0.2),
+                    ),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withOpacity(0.25),
                       width: 2,
                     ),
                   ),
@@ -723,11 +753,8 @@ class _HomeScreenState extends State<HomeScreen>
       animation: _drawerIconController,
       builder: (context, child) {
         final scale = 1.0 - (_drawerIconController.value * 0.1);
-
-        // Dynamic color based on connection
-        final iconColor = isConnected
-            ? AppTheme.connected
-            : AppTheme.getPrimaryColor(context);
+        final iconColor =
+        isConnected ? AppTheme.connected : AppTheme.getPrimaryColor(context);
 
         return Transform.scale(
           scale: scale,
@@ -763,8 +790,6 @@ class _HomeScreenState extends State<HomeScreen>
             vpnValue.stage?.toString() == "VPNStage.authenticating" ||
             vpnValue.stage?.toString() == "VPNStage.reconnecting";
 
-        // Animate button movement
-        // Animate button movement - only when CONNECTED (not connecting)
         if (connected && !_buttonMoveController.isCompleted) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _buttonMoveController.forward();
@@ -775,7 +800,23 @@ class _HomeScreenState extends State<HomeScreen>
           });
         }
 
+        if (connected) {
+          if (_progressController.isAnimating) {
+            _progressController.stop();
+            _progressController.reset();
+          }
+          if (_isLoading) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) setState(() => _isLoading = false);
+            });
+          }
+        }
 
+        if (!connected && !isConnecting && _isLoading) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() => _isLoading = false);
+          });
+        }
 
         if (connected && !_borderAnimationController.isAnimating) {
           _borderAnimationController.repeat();
@@ -793,45 +834,51 @@ class _HomeScreenState extends State<HomeScreen>
               SafeArea(
                 child: Column(
                   children: [
-                    // --- HEADER ---
-                    // --- MODERN HEADER ---
+                    // Enhanced Header
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Modern Logo + Title
                           Row(
                             children: [
-                              // Animated Shield Icon
+                              // Enhanced Shield Icon with gradient
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: connected
-                                        ? [AppTheme.connected, AppTheme.connected.withOpacity(0.7)]
-                                        : [AppTheme.getPrimaryColor(context), AppTheme.getPrimaryColor(context).withOpacity(0.7)],
+                                        ? [
+                                      AppTheme.connected,
+                                      AppTheme.connected.withOpacity(0.7)
+                                    ]
+                                        : [
+                                      AppTheme.getPrimaryColor(context),
+                                      AppTheme.getPrimaryColor(context)
+                                          .withOpacity(0.7)
+                                    ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                   ),
                                   borderRadius: BorderRadius.circular(14),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: (connected ? AppTheme.connected : AppTheme.getPrimaryColor(context)).withOpacity(0.3),
+                                      color: (connected
+                                          ? AppTheme.connected
+                                          : AppTheme.getPrimaryColor(context))
+                                          .withOpacity(0.3),
                                       blurRadius: 12,
                                       spreadRadius: 1,
                                     ),
                                   ],
                                 ),
-                                child: Icon(
+                                child: const Icon(
                                   Icons.shield_outlined,
                                   color: Colors.white,
                                   size: 24,
                                 ),
                               ),
                               const SizedBox(width: 12),
-
-                              // Title Text
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -844,25 +891,43 @@ class _HomeScreenState extends State<HomeScreen>
                                       letterSpacing: 0.5,
                                     ),
                                   ),
-                                  // Subtle status indicator
-                                  Text(
-                                    connected ? "Protected" : "Not Protected",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: connected
-                                          ? AppTheme.connected
-                                          : AppTheme.getTextSecondaryColor(context).withOpacity(0.6),
-                                      letterSpacing: 0.5,
-                                    ),
+                                  // Enhanced status indicator
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 6,
+                                        height: 6,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: connected
+                                              ? AppTheme.connected
+                                              : AppTheme.getTextSecondaryColor(
+                                              context)
+                                              .withOpacity(0.4),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        connected ? "Protected" : "Not Protected",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color: connected
+                                              ? AppTheme.connected
+                                              : AppTheme.getTextSecondaryColor(
+                                              context)
+                                              .withOpacity(0.6),
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
                             ],
                           ),
 
-                          // Glassmorphic Menu Button
-                          // Glassmorphic Menu Button with dynamic border
+                          // Enhanced Glassmorphic Menu Button
                           ClipRRect(
                             borderRadius: BorderRadius.circular(14),
                             child: BackdropFilter(
@@ -871,21 +936,34 @@ class _HomeScreenState extends State<HomeScreen>
                                 duration: const Duration(milliseconds: 800),
                                 curve: Curves.easeInOut,
                                 decoration: BoxDecoration(
-                                  color: AppTheme.getCardColor(context).withOpacity(0.6),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppTheme.getCardColor(context)
+                                          .withOpacity(0.7),
+                                      AppTheme.getCardColor(context)
+                                          .withOpacity(0.5),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
                                   borderRadius: BorderRadius.circular(14),
                                   border: Border.all(
                                     color: connected
                                         ? AppTheme.connected.withOpacity(0.4)
-                                        : AppTheme.getPrimaryColor(context).withOpacity(0.2),
+                                        : AppTheme.getPrimaryColor(context)
+                                        .withOpacity(0.2),
                                     width: 1.5,
                                   ),
-                                  boxShadow: connected ? [
+                                  boxShadow: connected
+                                      ? [
                                     BoxShadow(
-                                      color: AppTheme.connected.withOpacity(0.15),
+                                      color: AppTheme.connected
+                                          .withOpacity(0.15),
                                       blurRadius: 12,
                                       spreadRadius: 1,
                                     ),
-                                  ] : [],
+                                  ]
+                                      : [],
                                 ),
                                 child: _buildAnimatedDrawerIcon(connected),
                               ),
@@ -895,7 +973,7 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ),
 
-
+                    // Banner Ad
                     Obx(() {
                       if (adsController.banner != null) {
                         return Container(
@@ -908,36 +986,39 @@ class _HomeScreenState extends State<HomeScreen>
                       }
                       return const SizedBox.shrink();
                     }),
+
                     const Spacer(flex: 4),
 
+                    // Animated Power Orb
                     AnimatedBuilder(
                       animation: _buttonMoveController,
                       builder: (context, child) {
                         final moveOffset = _buttonMoveController.value * -30;
-
                         return Transform.translate(
                           offset: Offset(0, moveOffset),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              _buildPowerOrb(connected, isConnecting, vpnValue, serversProvider),
-                              _buildConnectionStatus(connected, isConnecting, vpnValue),
+                              _buildPowerOrb(
+                                  connected, isConnecting, vpnValue, serversProvider),
+                              _buildConnectionStatus(
+                                  connected, isConnecting, vpnValue),
                             ],
                           ),
                         );
                       },
                     ),
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.03),                    // --- SERVER SELECTOR ---
-                    // SIMPLE COLOR CHANGE - NO REPEATING ANIMATION
-// Replace your server selector
 
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.03),
+
+                    // Enhanced Server Selector
                     Padding(
                       padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
                       child: AnimatedBuilder(
-                        animation: _serverPressController, // ✅ Use its OWN controller
+                        animation: _serverPressController,
                         builder: (context, child) {
-                          final pressScale = 1.0 - (_serverPressController.value * 0.05);
-
+                          final pressScale =
+                              1.0 - (_serverPressController.value * 0.05);
                           return Transform.scale(
                             scale: pressScale,
                             child: GestureDetector(
@@ -956,19 +1037,20 @@ class _HomeScreenState extends State<HomeScreen>
                                   context: context,
                                   isScrollControlled: true,
                                   backgroundColor: Colors.transparent,
-                                  barrierColor: Colors.black.withOpacity(0.5), // ✅ Smooth dark backdrop
-                                  isDismissible: true, // ✅ Can tap outside to close
-                                  enableDrag: true, // ✅ Smooth drag to dismiss
-                                  transitionAnimationController: AnimationController(
+                                  barrierColor: Colors.black.withOpacity(0.5),
+                                  isDismissible: true,
+                                  enableDrag: true,
+                                  transitionAnimationController:
+                                  AnimationController(
                                     vsync: Navigator.of(context),
-                                    duration: const Duration(milliseconds: 500), // ✅ Slower, smoother animation
+                                    duration: const Duration(milliseconds: 500),
                                   )..forward(),
                                   builder: (context) => Container(
                                     height: MediaQuery.of(context).size.height * 0.95,
                                     decoration: BoxDecoration(
                                       color: AppTheme.getBackgroundColor(context),
                                       borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(28), // ✅ Slightly larger radius
+                                        topLeft: Radius.circular(28),
                                         topRight: Radius.circular(28),
                                       ),
                                       boxShadow: [
@@ -982,22 +1064,24 @@ class _HomeScreenState extends State<HomeScreen>
                                     ),
                                     child: Column(
                                       children: [
-                                        // ✅ Drag handle with smooth interaction
                                         GestureDetector(
-                                          onTap: () => Navigator.pop(context), // ✅ Tap to close
+                                          onTap: () => Navigator.pop(context),
                                           child: Container(
-                                            padding: const EdgeInsets.symmetric(vertical: 12),
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 12),
                                             child: Container(
                                               width: 40,
                                               height: 5,
                                               decoration: BoxDecoration(
-                                                color: AppTheme.getTextSecondaryColor(context).withOpacity(0.4),
-                                                borderRadius: BorderRadius.circular(10),
+                                                color: AppTheme
+                                                    .getTextSecondaryColor(context)
+                                                    .withOpacity(0.4),
+                                                borderRadius:
+                                                BorderRadius.circular(10),
                                               ),
                                             ),
                                           ),
                                         ),
-                                        // ✅ Your server tabs content
                                         Expanded(
                                           child: ServerTabs(isConnected: connected),
                                         ),
@@ -1015,19 +1099,30 @@ class _HomeScreenState extends State<HomeScreen>
                                     curve: Curves.easeInOut,
                                     padding: const EdgeInsets.all(20),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.getCardColor(context).withOpacity(0.4),
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          AppTheme.getCardColor(context)
+                                              .withOpacity(0.5),
+                                          AppTheme.getCardColor(context)
+                                              .withOpacity(0.3),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
                                       borderRadius: BorderRadius.circular(24),
                                       border: Border.all(
                                         color: connected
                                             ? AppTheme.connected.withOpacity(0.3)
-                                            : AppTheme.getPrimaryColor(context).withOpacity(0.3),
+                                            : AppTheme.getPrimaryColor(context)
+                                            .withOpacity(0.3),
                                         width: 1.5,
                                       ),
                                       boxShadow: [
                                         BoxShadow(
                                           color: connected
                                               ? AppTheme.connected.withOpacity(0.1)
-                                              : AppTheme.getPrimaryColor(context).withOpacity(0.1),
+                                              : AppTheme.getPrimaryColor(context)
+                                              .withOpacity(0.1),
                                           blurRadius: 20,
                                           spreadRadius: 2,
                                         ),
@@ -1035,26 +1130,49 @@ class _HomeScreenState extends State<HomeScreen>
                                     ),
                                     child: Row(
                                       children: [
+                                        // Enhanced flag container
                                         Container(
                                           width: 50,
                                           height: 50,
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
+                                            gradient: LinearGradient(
+                                              colors: connected
+                                                  ? [
+                                                AppTheme.connected
+                                                    .withOpacity(0.2),
+                                                AppTheme.connected
+                                                    .withOpacity(0.05),
+                                              ]
+                                                  : [
+                                                AppTheme.getPrimaryColor(
+                                                    context)
+                                                    .withOpacity(0.2),
+                                                AppTheme.getPrimaryColor(
+                                                    context)
+                                                    .withOpacity(0.05),
+                                              ],
+                                            ),
                                             border: Border.all(
                                               color: connected
-                                                  ? AppTheme.connected.withOpacity(0.6)
-                                                  : AppTheme.getPrimaryColor(context).withOpacity(0.3),
+                                                  ? AppTheme.connected
+                                                  .withOpacity(0.6)
+                                                  : AppTheme.getPrimaryColor(context)
+                                                  .withOpacity(0.3),
                                               width: 2,
                                             ),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: AppTheme.getPrimaryColor(context).withOpacity(0.2),
+                                                color:
+                                                AppTheme.getPrimaryColor(context)
+                                                    .withOpacity(0.2),
                                                 blurRadius: 10,
                                               ),
                                             ],
                                           ),
                                           child: ClipOval(
-                                            child: serversProvider.selectedServer != null
+                                            child: serversProvider.selectedServer !=
+                                                null
                                                 ? Image.asset(
                                               'assets/flags/${serversProvider.selectedServer!.countryCode.toLowerCase()}.png',
                                               fit: BoxFit.cover,
@@ -1063,11 +1181,17 @@ class _HomeScreenState extends State<HomeScreen>
                                             )
                                                 : Container(
                                               color: connected
-                                                  ? AppTheme.connected.withOpacity(0.1)
-                                                  : AppTheme.getPrimaryColor(context).withOpacity(0.1),
+                                                  ? AppTheme.connected
+                                                  .withOpacity(0.1)
+                                                  : AppTheme.getPrimaryColor(
+                                                  context)
+                                                  .withOpacity(0.1),
                                               child: Icon(
                                                 Icons.public,
-                                                color: connected ? AppTheme.connected : AppTheme.getPrimaryColor(context),
+                                                color: connected
+                                                    ? AppTheme.connected
+                                                    : AppTheme.getPrimaryColor(
+                                                    context),
                                                 size: 24,
                                               ),
                                             ),
@@ -1076,12 +1200,14 @@ class _HomeScreenState extends State<HomeScreen>
                                         const SizedBox(width: 16),
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 "SECURE LOCATION",
                                                 style: GoogleFonts.poppins(
-                                                  color: AppTheme.getTextSecondaryColor(context),
+                                                  color: AppTheme
+                                                      .getTextSecondaryColor(context),
                                                   fontSize: 10,
                                                   fontWeight: FontWeight.w600,
                                                   letterSpacing: 1,
@@ -1089,9 +1215,12 @@ class _HomeScreenState extends State<HomeScreen>
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
-                                                serversProvider.selectedServer?.country ?? "Select Smart Server",
+                                                serversProvider.selectedServer
+                                                    ?.country ??
+                                                    "Select Smart Server",
                                                 style: GoogleFonts.poppins(
-                                                  color: AppTheme.getTextPrimaryColor(context),
+                                                  color: AppTheme.getTextPrimaryColor(
+                                                      context),
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 16,
                                                 ),
@@ -1102,14 +1231,30 @@ class _HomeScreenState extends State<HomeScreen>
                                         Container(
                                           padding: const EdgeInsets.all(8),
                                           decoration: BoxDecoration(
-                                            color: connected
-                                                ? AppTheme.connected.withOpacity(0.2)
-                                                : AppTheme.getPrimaryColor(context).withOpacity(0.1),
+                                            gradient: LinearGradient(
+                                              colors: connected
+                                                  ? [
+                                                AppTheme.connected
+                                                    .withOpacity(0.2),
+                                                AppTheme.connected
+                                                    .withOpacity(0.05),
+                                              ]
+                                                  : [
+                                                AppTheme.getPrimaryColor(
+                                                    context)
+                                                    .withOpacity(0.15),
+                                                AppTheme.getPrimaryColor(
+                                                    context)
+                                                    .withOpacity(0.05),
+                                              ],
+                                            ),
                                             borderRadius: BorderRadius.circular(10),
                                           ),
                                           child: Icon(
                                             Icons.arrow_forward_ios_rounded,
-                                            color: connected ? AppTheme.connected : AppTheme.getPrimaryColor(context),
+                                            color: connected
+                                                ? AppTheme.connected
+                                                : AppTheme.getPrimaryColor(context),
                                             size: 18,
                                           ),
                                         ),
@@ -1151,12 +1296,10 @@ class ParticlePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..style = PaintingStyle.fill;
 
-    // Draw particles
     for (var particle in particles) {
       final x = particle.x * size.width;
       final y = particle.y * size.height;
 
-      // Particle color based on connection state - ORIGINAL COLORS
       Color particleColor;
       if (isConnected) {
         particleColor = AppTheme.connected;
@@ -1167,14 +1310,12 @@ class ParticlePainter extends CustomPainter {
       paint.color = particleColor.withOpacity(particle.opacity * (isConnected ? 0.8 : 0.4));
       canvas.drawCircle(Offset(x, y), particle.size, paint);
 
-      // Add glow effect for connected state
       if (isConnected) {
         paint.color = particleColor.withOpacity(particle.opacity * 0.2);
         canvas.drawCircle(Offset(x, y), particle.size * 3, paint);
       }
     }
 
-    // Draw connecting lines between nearby particles - ORIGINAL
     if (isConnected) {
       final linePaint = Paint()
         ..style = PaintingStyle.stroke
@@ -1184,7 +1325,6 @@ class ParticlePainter extends CustomPainter {
         for (int j = i + 1; j < particles.length; j++) {
           final p1 = particles[i];
           final p2 = particles[j];
-
           final dx = (p1.x - p2.x) * size.width;
           final dy = (p1.y - p2.y) * size.height;
           final distance = sqrt(dx * dx + dy * dy);
@@ -1205,27 +1345,6 @@ class ParticlePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(ParticlePainter oldDelegate) => true;
-}
-
-class _GlowOrb extends StatelessWidget {
-  final Color color;
-  const _GlowOrb({required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 350,
-      height: 350,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-      ),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 90, sigmaY: 90),
-        child: Container(color: Colors.transparent),
-      ),
-    );
-  }
 }
 
 void showEnhancedDisconnectDialog(BuildContext context, VoidCallback onConfirm) {
