@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 //if you got problems with your endpoint, read FAQ in the docs
-const String endpoint = "https://vpn.shieldvpn.net";
+const String endpoint = "https://vpn.technosofts.net";
 // "http://vpn-project.technosofts.net"; //<= Replace with yours
 
 const String appname = "VPN MAX";

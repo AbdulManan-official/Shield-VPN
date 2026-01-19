@@ -4,21 +4,11 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b1d88a55-7d82-40b8-8630-180ff1b14dd0" name="Changes" comment="updated imports">
+    <list default="true" id="b1d88a55-7d82-40b8-8630-180ff1b14dd0" name="Changes" comment="upgraded from vpn max to shield . removed the firebase logics">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/google-services.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/AndroidManifest.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/kotlin/com/technosofts/vpnprowithjava/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/kotlin/com/shieldvpn/secureproxy/MainActivity.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/providers/vpn_connection_provider.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/providers/vpn_connection_provider.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/utils/connection_state_manager.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/utils/connection_state_manager.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/View/home_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/home_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/View/lll.dart" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/utils/environment.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/utils/environment.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/macos/Flutter/GeneratedPluginRegistrant.swift" beforeDir="false" afterPath="$PROJECT_DIR$/macos/Flutter/GeneratedPluginRegistrant.swift" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/windows/flutter/generated_plugin_registrant.cc" beforeDir="false" afterPath="$PROJECT_DIR$/windows/flutter/generated_plugin_registrant.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/windows/flutter/generated_plugins.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/windows/flutter/generated_plugins.cmake" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -172,7 +162,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768797163642</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="upgraded from vpn max to shield . removed the firebase logics">
+      <option name="closed" value="true" />
+      <created>1768804329212</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1768804329212</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -195,15 +193,16 @@
     <MESSAGE value="designed home , and other screens" />
     <MESSAGE value="home done . next steps to change the project to a new one" />
     <MESSAGE value="updated imports" />
-    <option name="LAST_COMMIT_MESSAGE" value="updated imports" />
+    <MESSAGE value="upgraded from vpn max to shield . removed the firebase logics" />
+    <option name="LAST_COMMIT_MESSAGE" value="upgraded from vpn max to shield . removed the firebase logics" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="Dart">
           <url>file://$PROJECT_DIR$/lib/View/home_screen.dart</url>
-          <line>961</line>
-          <option name="timeStamp" value="3" />
+          <line>517</line>
+          <option name="timeStamp" value="4" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

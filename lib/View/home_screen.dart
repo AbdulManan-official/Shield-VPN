@@ -956,19 +956,19 @@ class _HomeScreenState extends State<HomeScreen>
                                   context: context,
                                   isScrollControlled: true,
                                   backgroundColor: Colors.transparent,
-                                  barrierColor: Colors.black.withOpacity(0.5), // ✅ Smooth dark backdrop
-                                  isDismissible: true, // ✅ Can tap outside to close
-                                  enableDrag: true, // ✅ Smooth drag to dismiss
+                                  barrierColor: Colors.black.withOpacity(0.5),
+                                  isDismissible: true,
+                                  enableDrag: true,
                                   transitionAnimationController: AnimationController(
                                     vsync: Navigator.of(context),
-                                    duration: const Duration(milliseconds: 500), // ✅ Slower, smoother animation
+                                    duration: Duration.zero, // ✅ No animation
                                   )..forward(),
                                   builder: (context) => Container(
                                     height: MediaQuery.of(context).size.height * 0.95,
                                     decoration: BoxDecoration(
                                       color: AppTheme.getBackgroundColor(context),
                                       borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(28), // ✅ Slightly larger radius
+                                        topLeft: Radius.circular(28),
                                         topRight: Radius.circular(28),
                                       ),
                                       boxShadow: [
@@ -982,9 +982,8 @@ class _HomeScreenState extends State<HomeScreen>
                                     ),
                                     child: Column(
                                       children: [
-                                        // ✅ Drag handle with smooth interaction
                                         GestureDetector(
-                                          onTap: () => Navigator.pop(context), // ✅ Tap to close
+                                          onTap: () => Navigator.pop(context),
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(vertical: 12),
                                             child: Container(
@@ -997,7 +996,6 @@ class _HomeScreenState extends State<HomeScreen>
                                             ),
                                           ),
                                         ),
-                                        // ✅ Your server tabs content
                                         Expanded(
                                           child: ServerTabs(isConnected: connected),
                                         ),
