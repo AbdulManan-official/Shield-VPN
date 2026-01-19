@@ -219,16 +219,6 @@ class _MoreScreenState extends State<MoreScreen> {
 
             _buildSettingsTile(
               context,
-              icon: Icons.star_rounded,
-              title: 'Rate this App',
-              subtitle: 'Support us with 5 stars',
-              onTap: () {},
-            ),
-
-            const SizedBox(height: 12),
-
-            _buildSettingsTile(
-              context,
               icon: Icons.feedback_rounded,
               title: 'Feedback',
               subtitle: 'Share your thoughts with us',

@@ -544,13 +544,17 @@ class _HomeScreenState extends State<HomeScreen>
       onTap: () async {
         HapticFeedback.mediumImpact();
 
+
         if (connected) {
+          // ✅ Show ad FIRST, before dialog
+          // adsController.showInterstitial();
+
+          // Then show dialog
           showEnhancedDisconnectDialog(context, () async {
-            adsController.showInterstitial();
             await vpnValue.disconnect();
             setState(() {
               _isConnected = false;
-              _isLoading = false; // ✅ ADD THIS
+              _isLoading = false;
             });
             _progressController.reset();
             showLogoToast("Disconnected", color: AppTheme.error);
@@ -593,7 +597,7 @@ class _HomeScreenState extends State<HomeScreen>
             }
           });
 
-          adsController.showInterstitial();
+          // adsController.showInterstitial();
           final AppsController apps = Get.find();
           vpnValue.initPlatformState(
             serversProvider.selectedServer!.ovpn,
@@ -752,6 +756,7 @@ class _HomeScreenState extends State<HomeScreen>
       },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
