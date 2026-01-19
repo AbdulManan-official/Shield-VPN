@@ -35,7 +35,7 @@
 //         await vpnProvider.initPlatformState(
 //           server.ovpn,
 //           server.country,
-//           const ["com.technosofts.vpnmax"],
+//           const ["com.shieldvpn.vpnmax"],
 //           server.username ?? "",
 //           server.password ?? "",
 //         );

@@ -2,7 +2,7 @@ plugins {
     id "com.android.application"
     id "org.jetbrains.kotlin.android"
     id "dev.flutter.flutter-gradle-plugin"
-    id "com.google.gms.google-services"
+//    id "com.google.gms.google-services"
 }
 
 def keystoreProperties = new Properties()
@@ -12,7 +12,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.technosofts.vpnmax"
+    namespace = "com.shieldvpn.secureproxy"
     compileSdk = 36
     ndkVersion = '29.0.14033849 rc4'
 
@@ -28,7 +28,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.technosofts.vpnmax"
+        applicationId = "com.shieldvpn.secureproxy"
         minSdkVersion = 24
         targetSdk = 36
         versionCode = flutter.versionCode

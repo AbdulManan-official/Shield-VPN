@@ -1,5 +1,4 @@
-package com.technosofts.vpnmax
-
+package com.shieldvpn.secureproxy
 import io.flutter.embedding.android.FlutterActivity
 
 class MainActivity: FlutterActivity()

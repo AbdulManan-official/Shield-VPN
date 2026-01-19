@@ -110,7 +110,7 @@ class VpnConnectionProvider with ChangeNotifier {
     await initialize();
 
     final bypassList = {
-      "com.technosofts.vpnmax",
+      "com.shieldvpn.vpnmax",
       ...disallowList,
     }.toList();
 
@@ -348,7 +348,7 @@ class VpnConnectionProvider with ChangeNotifier {
 //       _isConnected = false;
 //       notifyListeners();
 //
-//       final myPackage = "com.technosofts.vpnmax";
+//       final myPackage = "com.shieldvpn.vpnmax";
 //
 //       final bypassList = {
 //         myPackage,
