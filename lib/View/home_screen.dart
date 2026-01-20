@@ -22,6 +22,13 @@ import '../utils/analytics_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'more_screen.dart';
 
+// ✅ STEP 1: Define VPN Status Enum (ONE SOURCE OF TRUTH)
+enum VpnUiStatus {
+  disconnected,
+  connecting,
+  connected,
+}
+
 class Particle {
   double x;
   double y;
@@ -49,13 +56,14 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
-  // === FIELDS ===
-  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
-  bool _isLoading = false;
-  bool _isConnected = false;
-  bool _isButtonPressed = false;
-  late AnimationController _serverPressController;
+  // ✅ STEP 2: Replace ALL boolean flags with ONE enum
+  VpnUiStatus _vpnUiStatus = VpnUiStatus.disconnected;
 
+  // Keep only necessary state
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+  bool _isButtonPressed = false;
+
+  late AnimationController _serverPressController;
   late AnimationController _pulseController;
   late AnimationController _meshController;
   late AnimationController _particleController;
@@ -64,6 +72,7 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _buttonPressController;
   late AnimationController _buttonMoveController;
   late AnimationController _borderAnimationController;
+
   final AdsController adsController = Get.find();
   List<Particle> particles = [];
 
@@ -121,7 +130,6 @@ class _HomeScreenState extends State<HomeScreen>
 
     _initializeParticles();
 
-    // ✅ THIS IS THE CORRECT WAY
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _connectivitySubscription = Connectivity().onConnectivityChanged.listen(_updateConnectionStatus);
 
@@ -137,16 +145,38 @@ class _HomeScreenState extends State<HomeScreen>
       final vpnConnectionProvider = Provider.of<VpnConnectionProvider>(context, listen: false);
       await vpnConnectionProvider.restoreVpnState();
 
-      // ✅ Add listener here (INSIDE addPostFrameCallback)
+      // ✅ STEP 3: Clean VPN Listener - Maps VPN stages to UI status
       vpnConnectionProvider.addListener(() {
         if (!mounted) return;
 
         final stage = vpnConnectionProvider.stage;
         debugPrint('🔴 VPN Stage Changed: $stage');
 
-        if (stage == VPNStage.disconnected || stage == VPNStage.error) {
-          if (mounted && _isLoading) {
-            setState(() => _isLoading = false);
+        // Map VPN stages to UI status with SINGLE setState
+        if (stage == VPNStage.connecting ||
+            stage == VPNStage.authenticating ||
+            stage == VPNStage.wait_connection ||
+            stage == VPNStage.prepare) {
+
+          if (_vpnUiStatus != VpnUiStatus.connecting) {
+            setState(() => _vpnUiStatus = VpnUiStatus.connecting);
+            if (!_progressController.isAnimating) {
+              _progressController.repeat();
+            }
+          }
+        }
+
+        else if (stage == VPNStage.connected) {
+          if (_vpnUiStatus != VpnUiStatus.connected) {
+            setState(() => _vpnUiStatus = VpnUiStatus.connected);
+            _progressController.stop();
+            _progressController.reset();
+          }
+        }
+
+        else if (stage == VPNStage.disconnected || stage == VPNStage.error) {
+          if (_vpnUiStatus != VpnUiStatus.disconnected) {
+            setState(() => _vpnUiStatus = VpnUiStatus.disconnected);
             _progressController.stop();
             _progressController.reset();
 
@@ -154,12 +184,6 @@ class _HomeScreenState extends State<HomeScreen>
               showLogoToast("Connection failed", color: AppTheme.error);
             }
           }
-        }
-
-        if (stage == VPNStage.connected && mounted && _isLoading) {
-          setState(() => _isLoading = false);
-          _progressController.stop();
-          _progressController.reset();
         }
       });
     });
@@ -178,16 +202,16 @@ class _HomeScreenState extends State<HomeScreen>
       ));
     }
   }
+
   Widget _buildConnectionStatus(bool connected, bool isConnecting, VpnConnectionProvider vpnValue) {
     return AnimatedSize(
-      duration: const Duration(milliseconds: 2000),  // Match button animation duration
+      duration: const Duration(milliseconds: 2000),
       curve: Curves.easeInOut,
       child: (!connected && !isConnecting)
           ? const SizedBox.shrink()
           : Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Connection Status Badge
           Container(
             margin: const EdgeInsets.only(top: 18),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -233,7 +257,6 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
 
-          // Speed Section (only show when connected) with smooth animation
           AnimatedSize(
             duration: const Duration(milliseconds: 2000),
             curve: Curves.easeInOut,
@@ -268,7 +291,6 @@ class _HomeScreenState extends State<HomeScreen>
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            // UPLOAD
                             Expanded(
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -310,14 +332,12 @@ class _HomeScreenState extends State<HomeScreen>
                               ),
                             ),
 
-                            // DIVIDER
                             Container(
                               height: 40,
                               width: 1.5,
                               color: AppTheme.getPrimaryColor(context).withOpacity(0.2),
                             ),
 
-                            // DOWNLOAD
                             Expanded(
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -391,7 +411,11 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _loadAppState() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() => _isConnected = prefs.getBool('isConnected') ?? false);
+    bool wasConnected = prefs.getBool('isConnected') ?? false;
+
+    if (wasConnected && mounted) {
+      setState(() => _vpnUiStatus = VpnUiStatus.connected);
+    }
   }
 
   void _updateConnectionStatus(List<ConnectivityResult> result) {
@@ -406,18 +430,14 @@ class _HomeScreenState extends State<HomeScreen>
     return "${((b * 8) / 1000000).toStringAsFixed(1)} Mbps";
   }
 
-  // --- UI COMPONENTS ---
-
   Widget _buildParticleBackground(bool isConnected) {
     return AnimatedBuilder(
       animation: _particleController,
       builder: (context, child) {
-        // Update particle positions
         for (var particle in particles) {
           particle.x += particle.vx;
           particle.y += particle.vy;
 
-          // Wrap around edges
           if (particle.x < 0) particle.x = 1;
           if (particle.x > 1) particle.x = 0;
           if (particle.y < 0) particle.y = 1;
@@ -436,20 +456,20 @@ class _HomeScreenState extends State<HomeScreen>
       },
     );
   }
+
   Widget _buildMeshBackground() {
     final isDark = AppTheme.isDarkMode(context);
+    final isConnected = _vpnUiStatus == VpnUiStatus.connected;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 800),
       decoration: BoxDecoration(
-        color: _isConnected
-            ? const Color(0xFF10B981).withOpacity(isDark ? 0.15 : 0.08)  // GREEN when connected
-            : const Color(0xFF1D4ED8).withOpacity(isDark ? 0.15 : 0.08), // BLUE when disconnected
+        color: isConnected
+            ? const Color(0xFF10B981).withOpacity(isDark ? 0.15 : 0.08)
+            : const Color(0xFF1D4ED8).withOpacity(isDark ? 0.15 : 0.08),
       ),
     );
-
   }
-
 
   Widget _buildSpeedCard(String label, String value, IconData icon, Color color) {
     return ClipRRect(
@@ -458,7 +478,7 @@ class _HomeScreenState extends State<HomeScreen>
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           width: MediaQuery.of(context).size.width * 0.42,
-          padding: const EdgeInsets.symmetric( vertical: 20),
+          padding: const EdgeInsets.symmetric(vertical: 20),
           decoration: BoxDecoration(
             color: AppTheme.getCardColor(context).withOpacity(0.4),
             borderRadius: BorderRadius.circular(20),
@@ -516,17 +536,26 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-
-
-  Widget _buildPowerOrb(bool connected, bool isConnecting, VpnConnectionProvider vpnValue, ServersProvider serversProvider) {
+  // ✅ STEP 4: Clean Power Orb with Switch Statement
+  Widget _buildPowerOrb(VpnConnectionProvider vpnValue, ServersProvider serversProvider) {
     final isDark = AppTheme.isDarkMode(context);
 
-    // Button color based on state and theme
-    final statusColor = connected
-        ? AppTheme.connected
-        : (isConnecting
-        ? AppTheme.connecting
-        : (isDark ? AppTheme.primaryDark : AppTheme.primaryLight));
+    // ✅ Determine colors based on enum state
+    Color statusColor;
+    switch (_vpnUiStatus) {
+      case VpnUiStatus.connected:
+        statusColor = AppTheme.connected;
+        break;
+      case VpnUiStatus.connecting:
+        statusColor = AppTheme.connecting;
+        break;
+      case VpnUiStatus.disconnected:
+        statusColor = isDark ? AppTheme.primaryDark : AppTheme.primaryLight;
+        break;
+    }
+
+    final connected = _vpnUiStatus == VpnUiStatus.connected;
+    final isConnecting = _vpnUiStatus == VpnUiStatus.connecting;
 
     return GestureDetector(
       onTapDown: (_) {
@@ -544,23 +573,17 @@ class _HomeScreenState extends State<HomeScreen>
       onTap: () async {
         HapticFeedback.mediumImpact();
 
+        // ✅ STEP 5: Lock button during connecting
+        if (_vpnUiStatus == VpnUiStatus.connecting) return;
 
         if (connected) {
-          // ✅ Show ad FIRST, before dialog
-          // adsController.showInterstitial();
-
-          // Then show dialog
           showEnhancedDisconnectDialog(context, () async {
             await vpnValue.disconnect();
-            setState(() {
-              _isConnected = false;
-              _isLoading = false;
-            });
+            setState(() => _vpnUiStatus = VpnUiStatus.disconnected);
             _progressController.reset();
             showLogoToast("Disconnected", color: AppTheme.error);
           });
-        } else if (!isConnecting) {
-          // Check if servers are loaded
+        } else {
           if (serversProvider.freeServers.isEmpty) {
             showLogoToast("Loading servers...", color: AppTheme.warning);
             await serversProvider.getServers();
@@ -570,7 +593,6 @@ class _HomeScreenState extends State<HomeScreen>
             return showLogoToast("Please select a server", color: AppTheme.error);
           }
 
-          // Verify OVPN config exists
           if (serversProvider.selectedServer!.ovpn.isEmpty) {
             showLogoToast("Server config missing, retrying...", color: AppTheme.warning);
             await serversProvider.getServers();
@@ -584,20 +606,20 @@ class _HomeScreenState extends State<HomeScreen>
           debugPrint('🔵 Connecting to: ${serversProvider.selectedServer!.country}');
           debugPrint('🔵 OVPN config length: ${serversProvider.selectedServer!.ovpn.length}');
 
-          setState(() => _isLoading = true);
+          // ✅ SINGLE STATE UPDATE - Set to connecting
+          setState(() => _vpnUiStatus = VpnUiStatus.connecting);
           _progressController.repeat();
 
-          // ✅ ADD CONNECTION TIMEOUT
+          // Connection timeout
           Future.delayed(const Duration(seconds: 30), () {
-            if (mounted && _isLoading && !connected) {
-              setState(() => _isLoading = false);
+            if (mounted && _vpnUiStatus == VpnUiStatus.connecting) {
+              setState(() => _vpnUiStatus = VpnUiStatus.disconnected);
               _progressController.stop();
               _progressController.reset();
               showLogoToast("Connection timeout - Please try again", color: AppTheme.error);
             }
           });
 
-          // adsController.showInterstitial();
           final AppsController apps = Get.find();
           vpnValue.initPlatformState(
             serversProvider.selectedServer!.ovpn,
@@ -618,7 +640,6 @@ class _HomeScreenState extends State<HomeScreen>
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Outer pulse rings
                 if (connected) ...[
                   Container(
                     width: 240 + (_pulseController.value * 20),
@@ -644,7 +665,6 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ],
 
-                // Progress ring for connecting state
                 if (isConnecting)
                   SizedBox(
                     width: 200,
@@ -657,13 +677,12 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   ),
 
-                // Main orb - FILLED WITH THEME COLORS
                 Container(
                   width: 180,
                   height: 180,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: statusColor, // SOLID THEME COLOR
+                    color: statusColor,
                     boxShadow: [
                       BoxShadow(
                         color: statusColor.withOpacity(0.6),
@@ -679,7 +698,7 @@ class _HomeScreenState extends State<HomeScreen>
                   height: 150,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: statusColor.withOpacity(0.9), // Slightly transparent for depth
+                    color: statusColor.withOpacity(0.9),
                     border: Border.all(
                       color: Colors.white.withOpacity(0.2),
                       width: 2,
@@ -689,9 +708,9 @@ class _HomeScreenState extends State<HomeScreen>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        connected
+                        _vpnUiStatus == VpnUiStatus.connected
                             ? Icons.shield_outlined
-                            : isConnecting
+                            : _vpnUiStatus == VpnUiStatus.connecting
                             ? Icons.vpn_lock_rounded
                             : Icons.power_settings_new_rounded,
                         color: Colors.white,
@@ -699,15 +718,15 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        connected
+                        _vpnUiStatus == VpnUiStatus.connected
                             ? "DISCONNECT"
-                            : isConnecting
+                            : _vpnUiStatus == VpnUiStatus.connecting
                             ? "CONNECTING"
                             : "CONNECT",
                         style: GoogleFonts.poppins(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: connected ? 12 : 14,
+                          fontSize: _vpnUiStatus == VpnUiStatus.connected ? 12 : 14,
                           letterSpacing: 2,
                         ),
                       ),
@@ -727,11 +746,7 @@ class _HomeScreenState extends State<HomeScreen>
       animation: _drawerIconController,
       builder: (context, child) {
         final scale = 1.0 - (_drawerIconController.value * 0.1);
-
-        // Dynamic color based on connection
-        final iconColor = isConnected
-            ? AppTheme.connected
-            : AppTheme.getPrimaryColor(context);
+        final iconColor = isConnected ? AppTheme.connected : AppTheme.getPrimaryColor(context);
 
         return Transform.scale(
           scale: scale,
@@ -757,19 +772,15 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Consumer2<VpnConnectionProvider, ServersProvider>(
       builder: (context, vpnValue, serversProvider, child) {
-        final connected = vpnValue.stage?.toString() == "VPNStage.connected";
-        final isConnecting = _isLoading ||
-            vpnValue.stage?.toString() == "VPNStage.connecting" ||
-            vpnValue.stage?.toString() == "VPNStage.authenticating" ||
-            vpnValue.stage?.toString() == "VPNStage.reconnecting";
+        // ✅ STEP 6: ONE SOURCE OF TRUTH - Use enum for all UI logic
+        final connected = _vpnUiStatus == VpnUiStatus.connected;
+        final isConnecting = _vpnUiStatus == VpnUiStatus.connecting;
 
-        // Animate button movement
-        // Animate button movement - only when CONNECTED (not connecting)
+        // Button movement animation
         if (connected && !_buttonMoveController.isCompleted) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _buttonMoveController.forward();
@@ -779,8 +790,6 @@ class _HomeScreenState extends State<HomeScreen>
             _buttonMoveController.reverse();
           });
         }
-
-
 
         if (connected && !_borderAnimationController.isAnimating) {
           _borderAnimationController.repeat();
@@ -798,17 +807,13 @@ class _HomeScreenState extends State<HomeScreen>
               SafeArea(
                 child: Column(
                   children: [
-                    // --- HEADER ---
-                    // --- MODERN HEADER ---
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Modern Logo + Title
                           Row(
                             children: [
-                              // Animated Shield Icon
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
@@ -828,15 +833,13 @@ class _HomeScreenState extends State<HomeScreen>
                                     ),
                                   ],
                                 ),
-                                child: Icon(
+                                child: const Icon(
                                   Icons.shield_outlined,
                                   color: Colors.white,
                                   size: 24,
                                 ),
                               ),
                               const SizedBox(width: 12),
-
-                              // Title Text
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -849,7 +852,6 @@ class _HomeScreenState extends State<HomeScreen>
                                       letterSpacing: 0.5,
                                     ),
                                   ),
-                                  // Subtle status indicator
                                   Text(
                                     connected ? "Protected" : "Not Protected",
                                     style: GoogleFonts.poppins(
@@ -866,8 +868,6 @@ class _HomeScreenState extends State<HomeScreen>
                             ],
                           ),
 
-                          // Glassmorphic Menu Button
-                          // Glassmorphic Menu Button with dynamic border
                           ClipRRect(
                             borderRadius: BorderRadius.circular(14),
                             child: BackdropFilter(
@@ -900,7 +900,6 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ),
 
-
                     Obx(() {
                       if (adsController.banner != null) {
                         return Container(
@@ -925,21 +924,19 @@ class _HomeScreenState extends State<HomeScreen>
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              _buildPowerOrb(connected, isConnecting, vpnValue, serversProvider),
+                              _buildPowerOrb(vpnValue, serversProvider),
                               _buildConnectionStatus(connected, isConnecting, vpnValue),
                             ],
                           ),
                         );
                       },
                     ),
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.03),                    // --- SERVER SELECTOR ---
-                    // SIMPLE COLOR CHANGE - NO REPEATING ANIMATION
-// Replace your server selector
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.03),
 
                     Padding(
                       padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
                       child: AnimatedBuilder(
-                        animation: _serverPressController, // ✅ Use its OWN controller
+                        animation: _serverPressController,
                         builder: (context, child) {
                           final pressScale = 1.0 - (_serverPressController.value * 0.05);
 
@@ -966,7 +963,7 @@ class _HomeScreenState extends State<HomeScreen>
                                   enableDrag: true,
                                   transitionAnimationController: AnimationController(
                                     vsync: Navigator.of(context),
-                                    duration: Duration.zero, // ✅ No animation
+                                    duration: Duration.zero,
                                   )..forward(),
                                   builder: (context) => Container(
                                     height: MediaQuery.of(context).size.height * 0.95,
@@ -1154,12 +1151,10 @@ class ParticlePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..style = PaintingStyle.fill;
 
-    // Draw particles
     for (var particle in particles) {
       final x = particle.x * size.width;
       final y = particle.y * size.height;
 
-      // Particle color based on connection state - ORIGINAL COLORS
       Color particleColor;
       if (isConnected) {
         particleColor = AppTheme.connected;
@@ -1170,14 +1165,12 @@ class ParticlePainter extends CustomPainter {
       paint.color = particleColor.withOpacity(particle.opacity * (isConnected ? 0.8 : 0.4));
       canvas.drawCircle(Offset(x, y), particle.size, paint);
 
-      // Add glow effect for connected state
       if (isConnected) {
         paint.color = particleColor.withOpacity(particle.opacity * 0.2);
         canvas.drawCircle(Offset(x, y), particle.size * 3, paint);
       }
     }
 
-    // Draw connecting lines between nearby particles - ORIGINAL
     if (isConnected) {
       final linePaint = Paint()
         ..style = PaintingStyle.stroke
