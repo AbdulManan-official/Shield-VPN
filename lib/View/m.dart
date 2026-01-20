@@ -1183,11 +1183,6 @@
 // }
 
 
-// new one lastest code
-
-
-
-
 import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
@@ -1708,261 +1703,207 @@ class _HomeScreenState extends State<HomeScreen>
 
 
 
-  // ✅ STEP 1: Add this method in _HomeScreenState class (after _buildPowerOrb)
-
-  void _cancelConnection(VpnConnectionProvider vpnValue) async {
-    HapticFeedback.mediumImpact();
-
-    // Stop connection attempt
-    await vpnValue.disconnect();
-
-    // Reset UI state
-    setState(() {
-      _isLoading = false;
-      _isConnected = false;
-    });
-
-    _progressController.stop();
-    _progressController.reset();
-
-    showLogoToast("Connection cancelled", color: AppTheme.warning);
-  }
-
-// ✅ STEP 2: Replace your _buildPowerOrb widget with this updated version
-
   Widget _buildPowerOrb(bool connected, bool isConnecting, VpnConnectionProvider vpnValue, ServersProvider serversProvider) {
     final isDark = AppTheme.isDarkMode(context);
 
+    // Button color based on state and theme
     final statusColor = connected
         ? AppTheme.connected
         : (isConnecting
         ? AppTheme.connecting
         : (isDark ? AppTheme.primaryDark : AppTheme.primaryLight));
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GestureDetector(
-          onTapDown: (_) {
-            if (!isConnecting) { // ✅ Don't animate when connecting
-              setState(() => _isButtonPressed = true);
-              _buttonPressController.forward();
+    return GestureDetector(
+      onTapDown: (_) {
+        setState(() => _isButtonPressed = true);
+        _buttonPressController.forward();
+      },
+      onTapUp: (_) {
+        setState(() => _isButtonPressed = false);
+        _buttonPressController.reverse();
+      },
+      onTapCancel: () {
+        setState(() => _isButtonPressed = false);
+        _buttonPressController.reverse();
+      },
+      onTap: () async {
+        HapticFeedback.mediumImpact();
+
+
+        if (connected) {
+          // ✅ Show ad FIRST, before dialog
+          // adsController.showInterstitial();
+
+          // Then show dialog
+          showEnhancedDisconnectDialog(context, () async {
+            await vpnValue.disconnect();
+            setState(() {
+              _isConnected = false;
+              _isLoading = false;
+            });
+            _progressController.reset();
+            showLogoToast("Disconnected", color: AppTheme.error);
+          });
+        } else if (!isConnecting) {
+          // Check if servers are loaded
+          if (serversProvider.freeServers.isEmpty) {
+            showLogoToast("Loading servers...", color: AppTheme.warning);
+            await serversProvider.getServers();
+          }
+
+          if (serversProvider.selectedServer == null) {
+            return showLogoToast("Please select a server", color: AppTheme.error);
+          }
+
+          // Verify OVPN config exists
+          if (serversProvider.selectedServer!.ovpn.isEmpty) {
+            showLogoToast("Server config missing, retrying...", color: AppTheme.warning);
+            await serversProvider.getServers();
+
+            if (serversProvider.selectedServer == null ||
+                serversProvider.selectedServer!.ovpn.isEmpty) {
+              return showLogoToast("Server data unavailable", color: AppTheme.error);
             }
-          },
-          onTapUp: (_) {
-            if (!isConnecting) {
-              setState(() => _isButtonPressed = false);
-              _buttonPressController.reverse();
+          }
+
+          debugPrint('🔵 Connecting to: ${serversProvider.selectedServer!.country}');
+          debugPrint('🔵 OVPN config length: ${serversProvider.selectedServer!.ovpn.length}');
+
+          setState(() => _isLoading = true);
+          _progressController.repeat();
+
+          // ✅ ADD CONNECTION TIMEOUT
+          Future.delayed(const Duration(seconds: 30), () {
+            if (mounted && _isLoading && !connected) {
+              setState(() => _isLoading = false);
+              _progressController.stop();
+              _progressController.reset();
+              showLogoToast("Connection timeout - Please try again", color: AppTheme.error);
             }
-          },
-          onTapCancel: () {
-            if (!isConnecting) {
-              setState(() => _isButtonPressed = false);
-              _buttonPressController.reverse();
-            }
-          },
-          onTap: isConnecting
-              ? null  // ✅ Disable tap when connecting
-              : () async {
-            HapticFeedback.mediumImpact();
+          });
 
-            if (connected) {
-              adsController.showInterstitial();
+          // adsController.showInterstitial();
+          final AppsController apps = Get.find();
+          vpnValue.initPlatformState(
+            serversProvider.selectedServer!.ovpn,
+            serversProvider.selectedServer!.country,
+            apps.disallowList,
+            serversProvider.selectedServer!.username ?? "",
+            serversProvider.selectedServer!.password ?? "",
+          );
+        }
+      },
+      child: AnimatedBuilder(
+        animation: Listenable.merge([_pulseController, _progressController, _buttonPressController]),
+        builder: (context, child) {
+          final pressScale = 1.0 - (_buttonPressController.value * 0.05);
 
-              showEnhancedDisconnectDialog(context, () async {
-                await vpnValue.disconnect();
-                setState(() {
-                  _isConnected = false;
-                  _isLoading = false;
-                });
-                _progressController.reset();
-                showLogoToast("Disconnected", color: AppTheme.error);
-              });
-            } else if (!isConnecting) {
-              if (serversProvider.freeServers.isEmpty) {
-                showLogoToast("Loading servers...", color: AppTheme.warning);
-                await serversProvider.getServers();
-              }
-
-              if (serversProvider.selectedServer == null) {
-                return showLogoToast("Please select a server", color: AppTheme.error);
-              }
-
-              if (serversProvider.selectedServer!.ovpn.isEmpty) {
-                showLogoToast("Server config missing, retrying...", color: AppTheme.warning);
-                await serversProvider.getServers();
-
-                if (serversProvider.selectedServer == null ||
-                    serversProvider.selectedServer!.ovpn.isEmpty) {
-                  return showLogoToast("Server data unavailable", color: AppTheme.error);
-                }
-              }
-
-              debugPrint('🔵 Connecting to: ${serversProvider.selectedServer!.country}');
-              debugPrint('🔵 OVPN config length: ${serversProvider.selectedServer!.ovpn.length}');
-
-              setState(() => _isLoading = true);
-              _progressController.repeat();
-
-              Future.delayed(const Duration(seconds: 30), () {
-                if (mounted && _isLoading && !connected) {
-                  setState(() => _isLoading = false);
-                  _progressController.stop();
-                  _progressController.reset();
-                  showLogoToast("Connection timeout - Please try again", color: AppTheme.error);
-                }
-              });
-
-              adsController.showInterstitial();
-              final AppsController apps = Get.find();
-              vpnValue.initPlatformState(
-                serversProvider.selectedServer!.ovpn,
-                serversProvider.selectedServer!.country,
-                apps.disallowList,
-                serversProvider.selectedServer!.username ?? "",
-                serversProvider.selectedServer!.password ?? "",
-              );
-            }
-          },
-          child: AnimatedBuilder(
-            animation: Listenable.merge([_pulseController, _progressController, _buttonPressController]),
-            builder: (context, child) {
-              final pressScale = 1.0 - (_buttonPressController.value * 0.05);
-
-              return Transform.scale(
-                scale: pressScale,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    if (connected) ...[
-                      Container(
-                        width: 240 + (_pulseController.value * 20),
-                        height: 240 + (_pulseController.value * 20),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: statusColor.withOpacity(0.2 - (_pulseController.value * 0.15)),
-                            width: 2,
-                          ),
-                        ),
+          return Transform.scale(
+            scale: pressScale,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Outer pulse rings
+                if (connected) ...[
+                  Container(
+                    width: 240 + (_pulseController.value * 20),
+                    height: 240 + (_pulseController.value * 20),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: statusColor.withOpacity(0.2 - (_pulseController.value * 0.15)),
+                        width: 2,
                       ),
-                      Container(
-                        width: 210 + (_pulseController.value * 15),
-                        height: 210 + (_pulseController.value * 15),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: statusColor.withOpacity(0.3 - (_pulseController.value * 0.2)),
-                            width: 2,
-                          ),
+                    ),
+                  ),
+                  Container(
+                    width: 210 + (_pulseController.value * 15),
+                    height: 210 + (_pulseController.value * 15),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: statusColor.withOpacity(0.3 - (_pulseController.value * 0.2)),
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                ],
+
+                // Progress ring for connecting state
+                if (isConnecting)
+                  SizedBox(
+                    width: 200,
+                    height: 200,
+                    child: CircularProgressIndicator(
+                      value: null,
+                      strokeWidth: 3,
+                      valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                      backgroundColor: statusColor.withOpacity(0.1),
+                    ),
+                  ),
+
+                // Main orb - FILLED WITH THEME COLORS
+                Container(
+                  width: 180,
+                  height: 180,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: statusColor, // SOLID THEME COLOR
+                    boxShadow: [
+                      BoxShadow(
+                        color: statusColor.withOpacity(0.6),
+                        blurRadius: 50,
+                        spreadRadius: connected ? 15 : 8,
+                      ),
+                    ],
+                  ),
+                ),
+
+                Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: statusColor.withOpacity(0.9), // Slightly transparent for depth
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.2),
+                      width: 2,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        connected
+                            ? Icons.shield_outlined
+                            : isConnecting
+                            ? Icons.vpn_lock_rounded
+                            : Icons.power_settings_new_rounded,
+                        color: Colors.white,
+                        size: 50,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        connected
+                            ? "DISCONNECT"
+                            : isConnecting
+                            ? "CONNECTING"
+                            : "CONNECT",
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: connected ? 12 : 14,
+                          letterSpacing: 2,
                         ),
                       ),
                     ],
-
-                    if (isConnecting)
-                      SizedBox(
-                        width: 200,
-                        height: 200,
-                        child: CircularProgressIndicator(
-                          value: null,
-                          strokeWidth: 3,
-                          valueColor: AlwaysStoppedAnimation<Color>(statusColor),
-                          backgroundColor: statusColor.withOpacity(0.1),
-                        ),
-                      ),
-
-                    Container(
-                      width: 180,
-                      height: 180,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: statusColor,
-                        boxShadow: [
-                          BoxShadow(
-                            color: statusColor.withOpacity(0.6),
-                            blurRadius: 50,
-                            spreadRadius: connected ? 15 : 8,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    Container(
-                      width: 150,
-                      height: 150,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: statusColor.withOpacity(0.9),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
-                          width: 2,
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            connected
-                                ? Icons.shield_outlined
-                                : isConnecting
-                                ? Icons.vpn_lock_rounded
-                                : Icons.power_settings_new_rounded,
-                            color: Colors.white,
-                            size: 50,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            connected
-                                ? "DISCONNECT"
-                                : isConnecting
-                                ? "CONNECTING"
-                                : "CONNECT",
-                            style: GoogleFonts.poppins(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: connected ? 12 : 14,
-                              letterSpacing: 2,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-
-        // ✅ STEP 3: Add Simple Cancel Button (shows only when connecting)
-        if (isConnecting)
-          Padding(
-            padding: const EdgeInsets.only(top: 20),
-            child: GestureDetector(
-              onTap: () => _cancelConnection(vpnValue),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppTheme.error.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppTheme.error.withOpacity(0.3),
-                    width: 1,
                   ),
                 ),
-                child: Text(
-                  "CANCEL",
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.error,
-                    letterSpacing: 1,
-                  ),
-                ),
-              ),
+              ],
             ),
-          ),
-      ],
+          );
+        },
+      ),
     );
   }
 

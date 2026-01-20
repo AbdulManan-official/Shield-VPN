@@ -203,6 +203,23 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
+  void _handleCancelConnection(VpnConnectionProvider vpnValue) {
+    debugPrint('🔴 User cancelled connection');
+
+    // Disconnect the VPN
+    vpnValue.disconnect();
+
+    // Update UI state
+    setState(() => _vpnUiStatus = VpnUiStatus.disconnected);
+
+    // Stop and reset progress animation
+    _progressController.stop();
+    _progressController.reset();
+
+    // Show feedback to user
+    showLogoToast("Connection cancelled", color: AppTheme.warning);
+  }
+
   Widget _buildConnectionStatus(bool connected, bool isConnecting, VpnConnectionProvider vpnValue) {
     return AnimatedSize(
       duration: const Duration(milliseconds: 2000),
@@ -212,6 +229,7 @@ class _HomeScreenState extends State<HomeScreen>
           : Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Existing CONNECTED/CONNECTING status badge
           Container(
             margin: const EdgeInsets.only(top: 18),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -257,6 +275,52 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
 
+          // ✅ NEW: Cancel button (only shown when connecting)
+          AnimatedSize(
+            duration: const Duration(milliseconds: 2000),
+            curve: Curves.easeInOut,
+            child: isConnecting
+                ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.mediumImpact();
+                    _handleCancelConnection(vpnValue);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.error.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppTheme.error.withOpacity(0.1),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "CANCEL",
+                          style: GoogleFonts.poppins(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.error,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            )
+                : const SizedBox.shrink(),
+          ),
+
+          // Existing upload/download stats (shown when connected)
           AnimatedSize(
             duration: const Duration(milliseconds: 2000),
             curve: Curves.easeInOut,
@@ -578,6 +642,7 @@ class _HomeScreenState extends State<HomeScreen>
 
         if (connected) {
           showEnhancedDisconnectDialog(context, () async {
+            adsController.showInterstitial();
             await vpnValue.disconnect();
             setState(() => _vpnUiStatus = VpnUiStatus.disconnected);
             _progressController.reset();
@@ -619,7 +684,7 @@ class _HomeScreenState extends State<HomeScreen>
               showLogoToast("Connection timeout - Please try again", color: AppTheme.error);
             }
           });
-
+          adsController.showInterstitial();
           final AppsController apps = Get.find();
           vpnValue.initPlatformState(
             serversProvider.selectedServer!.ovpn,
