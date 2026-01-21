@@ -18,7 +18,6 @@ import '../providers/ads_controller.dart';
 import '../providers/apps_provider.dart';
 import '../providers/servers_provider.dart';
 import '../providers/vpn_connection_provider.dart';
-import '../utils/analytics_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'more_screen.dart';
 
@@ -134,18 +133,32 @@ class _HomeScreenState extends State<HomeScreen>
       _connectivitySubscription = Connectivity().onConnectivityChanged.listen(_updateConnectionStatus);
 
       final serversProvider = Provider.of<ServersProvider>(context, listen: false);
-      await serversProvider.initialize();
+      final vpnConnectionProvider = Provider.of<VpnConnectionProvider>(context, listen: false);
 
-      if (serversProvider.freeServers.isEmpty) {
-        await serversProvider.getServers();
+      // ✅ OPTIMIZATION: Run VPN restore and server loading in parallel
+      final vpnRestoreFuture = vpnConnectionProvider.restoreVpnState();
+
+      final serverInitFuture = serversProvider.initialize().then((_) {
+        if (serversProvider.freeServers.isEmpty) {
+          return serversProvider.getServers();
+        }
+      });
+
+      // ✅ Wait for VPN restore to complete (fastest operation)
+      await vpnRestoreFuture;
+
+      // ✅ Sync UI immediately with actual VPN state
+      if (mounted) {
+        final currentStage = vpnConnectionProvider.stage;
+        if (currentStage == VPNStage.connected) {
+          setState(() => _vpnUiStatus = VpnUiStatus.connected);
+        }
       }
 
-      _loadAppState();
+      // ✅ Wait for servers to finish loading
+      await serverInitFuture;
 
-      final vpnConnectionProvider = Provider.of<VpnConnectionProvider>(context, listen: false);
-      await vpnConnectionProvider.restoreVpnState();
-
-      // ✅ STEP 3: Clean VPN Listener - Maps VPN stages to UI status
+      // ✅ VPN Listener - Maps VPN stages to UI status
       vpnConnectionProvider.addListener(() {
         if (!mounted) return;
 
@@ -171,6 +184,7 @@ class _HomeScreenState extends State<HomeScreen>
             setState(() => _vpnUiStatus = VpnUiStatus.connected);
             _progressController.stop();
             _progressController.reset();
+            SharedPreferences.getInstance().then((prefs) => prefs.setBool('isConnected', true));
           }
         }
 
@@ -473,14 +487,14 @@ class _HomeScreenState extends State<HomeScreen>
     super.dispose();
   }
 
-  void _loadAppState() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool wasConnected = prefs.getBool('isConnected') ?? false;
-
-    if (wasConnected && mounted) {
-      setState(() => _vpnUiStatus = VpnUiStatus.connected);
-    }
-  }
+  // void _loadAppState() async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   bool wasConnected = prefs.getBool('isConnected') ?? false;
+  //
+  //   if (wasConnected && mounted) {
+  //     setState(() => _vpnUiStatus = VpnUiStatus.connected);
+  //   }
+  // }
 
   void _updateConnectionStatus(List<ConnectivityResult> result) {
     if (result.contains(ConnectivityResult.none)) {
@@ -644,6 +658,8 @@ class _HomeScreenState extends State<HomeScreen>
           showEnhancedDisconnectDialog(context, () async {
             adsController.showInterstitial();
             await vpnValue.disconnect();
+            SharedPreferences prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('isConnected', false);
             setState(() => _vpnUiStatus = VpnUiStatus.disconnected);
             _progressController.reset();
             showLogoToast("Disconnected", color: AppTheme.error);
