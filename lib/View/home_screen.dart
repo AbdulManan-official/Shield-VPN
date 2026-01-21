@@ -185,6 +185,13 @@ class _HomeScreenState extends State<HomeScreen>
             _progressController.stop();
             _progressController.reset();
             SharedPreferences.getInstance().then((prefs) => prefs.setBool('isConnected', true));
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (mounted) {
+                final AdsController ads = Get.find();
+                ads.showInterstitial();
+              }
+            });
+
           }
         }
 
@@ -700,7 +707,6 @@ class _HomeScreenState extends State<HomeScreen>
               showLogoToast("Connection timeout - Please try again", color: AppTheme.error);
             }
           });
-          adsController.showInterstitial();
           final AppsController apps = Get.find();
           vpnValue.initPlatformState(
             serversProvider.selectedServer!.ovpn,
