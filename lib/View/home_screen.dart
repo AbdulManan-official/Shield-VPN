@@ -72,14 +72,14 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _buttonMoveController;
   late AnimationController _borderAnimationController;
 
-  final AdsController adsController = Get.find();
+  // final AdsController adsController = Get.find();
   List<Particle> particles = [];
 
   @override
   void initState() {
     super.initState();
 
-    adsController.loadBanner();
+    // adsController.loadBanner();
     WidgetsBinding.instance.addObserver(this);
 
     _pulseController = AnimationController(
@@ -187,8 +187,8 @@ class _HomeScreenState extends State<HomeScreen>
             SharedPreferences.getInstance().then((prefs) => prefs.setBool('isConnected', true));
             Future.delayed(const Duration(milliseconds: 500), () {
               if (mounted) {
-                final AdsController ads = Get.find();
-                ads.showInterstitial();
+                // final AdsController ads = Get.find();
+                // ads.showInterstitial();
               }
             });
 
@@ -663,7 +663,7 @@ class _HomeScreenState extends State<HomeScreen>
 
         if (connected) {
           showEnhancedDisconnectDialog(context, () async {
-            adsController.showInterstitial();
+            // adsController.showInterstitial();
             await vpnValue.disconnect();
             SharedPreferences prefs = await SharedPreferences.getInstance();
             await prefs.setBool('isConnected', false);
@@ -1002,18 +1002,18 @@ class _HomeScreenState extends State<HomeScreen>
                               ),
 
                               // 🔹 Banner Ad
-                              Obx(() {
-                                if (adsController.banner != null) {
-                                  return Container(
-                                    margin: const EdgeInsets.only(bottom: 20),
-                                    alignment: Alignment.center,
-                                    width: adsController.banner!.size.width.toDouble(),
-                                    height: adsController.banner!.size.height.toDouble(),
-                                    child: AdWidget(ad: adsController.banner!),
-                                  );
-                                }
-                                return const SizedBox.shrink();
-                              }),
+                              // Obx(() {
+                              //   if (adsController.banner != null) {
+                              //     return Container(
+                              //       margin: const EdgeInsets.only(bottom: 20),
+                              //       alignment: Alignment.center,
+                              //       width: adsController.banner!.size.width.toDouble(),
+                              //       height: adsController.banner!.size.height.toDouble(),
+                              //       child: AdWidget(ad: adsController.banner!),
+                              //     );
+                              //   }
+                              //   return const SizedBox.shrink();
+                              // }),
 
                               // ✅ KEEP SPACER - it will work correctly inside IntrinsicHeight
                               const Spacer(flex: 4),

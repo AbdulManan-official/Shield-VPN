@@ -43,9 +43,9 @@ void main() async {
 
   await Prefs.init();
 
-  Get.put(SubscriptionController(), permanent: true);
+  // Get.put(SubscriptionController(), permanent: true);
   Get.put(AppsController(), permanent: true);
-  Get.put(AdsController(), permanent: true);
+  // Get.put(AdsController(), permanent: true);
 
   initializeAdsAndConsent();
 
@@ -61,12 +61,12 @@ void main() async {
 }
 
 Future<void> initializeAdsAndConsent() async {
-  final AdsController adsController = Get.find();
+  // final AdsController adsController = Get.find();
   final initHelper = InitializationHelper();
   await initHelper.initialize();
-  adsController.preloadInterstitial();
-  adsController.loadBanner2();
-  adsController.loadBanner();
+  // adsController.preloadInterstitial();
+  // adsController.loadBanner2();
+  // adsController.loadBanner();
   try {
     final serversProvider = ServersProvider();
     await serversProvider.getServers();
@@ -169,13 +169,13 @@ class _MyAppState extends State<MyApp> {
     }
 
     // Update subscription status based on all purchases
-    final newStatus =
-        hasActiveSubscription || _checkOtherSubscriptionConditions();
-    Prefs.setBool('isSubscribed', newStatus);
-    if (mounted) {
-      final AdsController adsController = Get.find();
-      adsController.setSubscriptionStatus();
-    }
+    // final newStatus =
+    //     hasActiveSubscription || _checkOtherSubscriptionConditions();
+    // Prefs.setBool('isSubscribed', newStatus);
+    // if (mounted) {
+    //   final AdsController adsController = Get.find();
+    //   adsController.setSubscriptionStatus();
+    // }
   }
 
   bool _checkOtherSubscriptionConditions() {
