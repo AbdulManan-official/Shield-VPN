@@ -887,330 +887,355 @@ class _HomeScreenState extends State<HomeScreen>
 
         return Scaffold(
           backgroundColor: AppTheme.getBackgroundColor(context),
+          // Replace your existing build method's body (inside Scaffold) with this:
+
           body: Stack(
             children: [
               _buildMeshBackground(),
               _buildParticleBackground(connected),
+
+              // ✅ SOLUTION: Wrap SafeArea content in LayoutBuilder + SingleChildScrollView
               SafeArea(
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(), // Prevents bouncing
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight, // Takes full available height
+                        ),
+                        child: IntrinsicHeight( // ✅ Important: Makes Column fill available space
+                          child: Column(
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: connected
-                                        ? [AppTheme.connected, AppTheme.connected.withOpacity(0.7)]
-                                        : [AppTheme.getPrimaryColor(context), AppTheme.getPrimaryColor(context).withOpacity(0.7)],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  borderRadius: BorderRadius.circular(14),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: (connected ? AppTheme.connected : AppTheme.getPrimaryColor(context)).withOpacity(0.3),
-                                      blurRadius: 12,
-                                      spreadRadius: 1,
+                              // 🔹 Header with Shield Logo & Menu
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(10),
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: connected
+                                                  ? [AppTheme.connected, AppTheme.connected.withOpacity(0.7)]
+                                                  : [AppTheme.getPrimaryColor(context), AppTheme.getPrimaryColor(context).withOpacity(0.7)],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            ),
+                                            borderRadius: BorderRadius.circular(14),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: (connected ? AppTheme.connected : AppTheme.getPrimaryColor(context)).withOpacity(0.3),
+                                                blurRadius: 12,
+                                                spreadRadius: 1,
+                                              ),
+                                            ],
+                                          ),
+                                          child: const Icon(
+                                            Icons.shield_outlined,
+                                            color: Colors.white,
+                                            size: 24,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              "SHIELD VPN",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.w900,
+                                                color: AppTheme.getTextPrimaryColor(context),
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                            Text(
+                                              connected ? "Protected" : "Not Protected",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w600,
+                                                color: connected
+                                                    ? AppTheme.connected
+                                                    : AppTheme.getTextSecondaryColor(context).withOpacity(0.6),
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(14),
+                                      child: BackdropFilter(
+                                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                        child: AnimatedContainer(
+                                          duration: const Duration(milliseconds: 800),
+                                          curve: Curves.easeInOut,
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.getCardColor(context).withOpacity(0.6),
+                                            borderRadius: BorderRadius.circular(14),
+                                            border: Border.all(
+                                              color: connected
+                                                  ? AppTheme.connected.withOpacity(0.4)
+                                                  : AppTheme.getPrimaryColor(context).withOpacity(0.2),
+                                              width: 1.5,
+                                            ),
+                                            boxShadow: connected ? [
+                                              BoxShadow(
+                                                color: AppTheme.connected.withOpacity(0.15),
+                                                blurRadius: 12,
+                                                spreadRadius: 1,
+                                              ),
+                                            ] : [],
+                                          ),
+                                          child: _buildAnimatedDrawerIcon(connected),
+                                        ),
+                                      ),
                                     ),
                                   ],
                                 ),
-                                child: const Icon(
-                                  Icons.shield_outlined,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
                               ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "SHIELD VPN",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w900,
-                                      color: AppTheme.getTextPrimaryColor(context),
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                  Text(
-                                    connected ? "Protected" : "Not Protected",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: connected
-                                          ? AppTheme.connected
-                                          : AppTheme.getTextSecondaryColor(context).withOpacity(0.6),
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
 
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(14),
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 800),
-                                curve: Curves.easeInOut,
-                                decoration: BoxDecoration(
-                                  color: AppTheme.getCardColor(context).withOpacity(0.6),
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(
-                                    color: connected
-                                        ? AppTheme.connected.withOpacity(0.4)
-                                        : AppTheme.getPrimaryColor(context).withOpacity(0.2),
-                                    width: 1.5,
-                                  ),
-                                  boxShadow: connected ? [
-                                    BoxShadow(
-                                      color: AppTheme.connected.withOpacity(0.15),
-                                      blurRadius: 12,
-                                      spreadRadius: 1,
-                                    ),
-                                  ] : [],
-                                ),
-                                child: _buildAnimatedDrawerIcon(connected),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                              // 🔹 Banner Ad
+                              Obx(() {
+                                if (adsController.banner != null) {
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 20),
+                                    alignment: Alignment.center,
+                                    width: adsController.banner!.size.width.toDouble(),
+                                    height: adsController.banner!.size.height.toDouble(),
+                                    child: AdWidget(ad: adsController.banner!),
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              }),
 
-                    Obx(() {
-                      if (adsController.banner != null) {
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 20),
-                          alignment: Alignment.center,
-                          width: adsController.banner!.size.width.toDouble(),
-                          height: adsController.banner!.size.height.toDouble(),
-                          child: AdWidget(ad: adsController.banner!),
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    }),
-                    const Spacer(flex: 4),
+                              // ✅ KEEP SPACER - it will work correctly inside IntrinsicHeight
+                              const Spacer(flex: 4),
 
-                    AnimatedBuilder(
-                      animation: _buttonMoveController,
-                      builder: (context, child) {
-                        final moveOffset = _buttonMoveController.value * -30;
+                              // 🔹 Power Orb with Connection Status
+                              AnimatedBuilder(
+                                animation: _buttonMoveController,
+                                builder: (context, child) {
+                                  final moveOffset = _buttonMoveController.value * -30;
 
-                        return Transform.translate(
-                          offset: Offset(0, moveOffset),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _buildPowerOrb(vpnValue, serversProvider),
-                              _buildConnectionStatus(connected, isConnecting, vpnValue),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.03),
-
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
-                      child: AnimatedBuilder(
-                        animation: _serverPressController,
-                        builder: (context, child) {
-                          final pressScale = 1.0 - (_serverPressController.value * 0.05);
-
-                          return Transform.scale(
-                            scale: pressScale,
-                            child: GestureDetector(
-                              onTapDown: (_) {
-                                _serverPressController.forward();
-                                HapticFeedback.mediumImpact();
-                              },
-                              onTapUp: (_) {
-                                _serverPressController.reverse();
-                              },
-                              onTapCancel: () {
-                                _serverPressController.reverse();
-                              },
-                              onTap: () {
-                                showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  backgroundColor: Colors.transparent,
-                                  barrierColor: Colors.black.withOpacity(0.5),
-                                  isDismissible: true,
-                                  enableDrag: true,
-                                  transitionAnimationController: AnimationController(
-                                    vsync: Navigator.of(context),
-                                    duration: Duration.zero,
-                                  )..forward(),
-                                  builder: (context) => Container(
-                                    height: MediaQuery.of(context).size.height * 0.95,
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.getBackgroundColor(context),
-                                      borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(28),
-                                        topRight: Radius.circular(28),
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.2),
-                                          blurRadius: 20,
-                                          spreadRadius: 5,
-                                          offset: const Offset(0, -5),
-                                        ),
-                                      ],
-                                    ),
+                                  return Transform.translate(
+                                    offset: Offset(0, moveOffset),
                                     child: Column(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        GestureDetector(
-                                          onTap: () => Navigator.pop(context),
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(vertical: 12),
-                                            child: Container(
-                                              width: 40,
-                                              height: 5,
+                                        _buildPowerOrb(vpnValue, serversProvider),
+                                        _buildConnectionStatus(connected, isConnecting, vpnValue),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+
+                              SizedBox(height: MediaQuery.of(context).size.height * 0.03),
+
+                              // 🔹 Server Selection Card
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
+                                child: AnimatedBuilder(
+                                  animation: _serverPressController,
+                                  builder: (context, child) {
+                                    final pressScale = 1.0 - (_serverPressController.value * 0.05);
+
+                                    return Transform.scale(
+                                      scale: pressScale,
+                                      child: GestureDetector(
+                                        onTapDown: (_) {
+                                          _serverPressController.forward();
+                                          HapticFeedback.mediumImpact();
+                                        },
+                                        onTapUp: (_) {
+                                          _serverPressController.reverse();
+                                        },
+                                        onTapCancel: () {
+                                          _serverPressController.reverse();
+                                        },
+                                        onTap: () {
+                                          showModalBottomSheet(
+                                            context: context,
+                                            isScrollControlled: true,
+                                            backgroundColor: Colors.transparent,
+                                            barrierColor: Colors.black.withOpacity(0.5),
+                                            isDismissible: true,
+                                            enableDrag: true,
+                                            transitionAnimationController: AnimationController(
+                                              vsync: Navigator.of(context),
+                                              duration: Duration.zero,
+                                            )..forward(),
+                                            builder: (context) => Container(
+                                              height: MediaQuery.of(context).size.height * 0.95,
                                               decoration: BoxDecoration(
-                                                color: AppTheme.getTextSecondaryColor(context).withOpacity(0.4),
-                                                borderRadius: BorderRadius.circular(10),
+                                                color: AppTheme.getBackgroundColor(context),
+                                                borderRadius: const BorderRadius.only(
+                                                  topLeft: Radius.circular(28),
+                                                  topRight: Radius.circular(28),
+                                                ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black.withOpacity(0.2),
+                                                    blurRadius: 20,
+                                                    spreadRadius: 5,
+                                                    offset: const Offset(0, -5),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Column(
+                                                children: [
+                                                  GestureDetector(
+                                                    onTap: () => Navigator.pop(context),
+                                                    child: Container(
+                                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                                      child: Container(
+                                                        width: 40,
+                                                        height: 5,
+                                                        decoration: BoxDecoration(
+                                                          color: AppTheme.getTextSecondaryColor(context).withOpacity(0.4),
+                                                          borderRadius: BorderRadius.circular(10),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    child: ServerTabs(isConnected: connected),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(24),
+                                          child: BackdropFilter(
+                                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                            child: AnimatedContainer(
+                                              duration: const Duration(milliseconds: 800),
+                                              curve: Curves.easeInOut,
+                                              padding: const EdgeInsets.all(20),
+                                              decoration: BoxDecoration(
+                                                color: AppTheme.getCardColor(context).withOpacity(0.4),
+                                                borderRadius: BorderRadius.circular(24),
+                                                border: Border.all(
+                                                  color: connected
+                                                      ? AppTheme.connected.withOpacity(0.3)
+                                                      : AppTheme.getPrimaryColor(context).withOpacity(0.3),
+                                                  width: 1.5,
+                                                ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: connected
+                                                        ? AppTheme.connected.withOpacity(0.1)
+                                                        : AppTheme.getPrimaryColor(context).withOpacity(0.1),
+                                                    blurRadius: 20,
+                                                    spreadRadius: 2,
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  Container(
+                                                    width: 50,
+                                                    height: 50,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      border: Border.all(
+                                                        color: connected
+                                                            ? AppTheme.connected.withOpacity(0.6)
+                                                            : AppTheme.getPrimaryColor(context).withOpacity(0.3),
+                                                        width: 2,
+                                                      ),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: AppTheme.getPrimaryColor(context).withOpacity(0.2),
+                                                          blurRadius: 10,
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    child: ClipOval(
+                                                      child: serversProvider.selectedServer != null
+                                                          ? Image.asset(
+                                                        'assets/flags/${serversProvider.selectedServer!.countryCode.toLowerCase()}.png',
+                                                        fit: BoxFit.cover,
+                                                        cacheWidth: 100,
+                                                        cacheHeight: 100,
+                                                      )
+                                                          : Container(
+                                                        color: connected
+                                                            ? AppTheme.connected.withOpacity(0.1)
+                                                            : AppTheme.getPrimaryColor(context).withOpacity(0.1),
+                                                        child: Icon(
+                                                          Icons.public,
+                                                          color: connected ? AppTheme.connected : AppTheme.getPrimaryColor(context),
+                                                          size: 24,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 16),
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(
+                                                          "SECURE LOCATION",
+                                                          style: GoogleFonts.poppins(
+                                                            color: AppTheme.getTextSecondaryColor(context),
+                                                            fontSize: 10,
+                                                            fontWeight: FontWeight.w600,
+                                                            letterSpacing: 1,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(height: 4),
+                                                        Text(
+                                                          serversProvider.selectedServer?.country ?? "Select Smart Server",
+                                                          style: GoogleFonts.poppins(
+                                                            color: AppTheme.getTextPrimaryColor(context),
+                                                            fontWeight: FontWeight.bold,
+                                                            fontSize: 16,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  Container(
+                                                    padding: const EdgeInsets.all(8),
+                                                    decoration: BoxDecoration(
+                                                      color: connected
+                                                          ? AppTheme.connected.withOpacity(0.2)
+                                                          : AppTheme.getPrimaryColor(context).withOpacity(0.1),
+                                                      borderRadius: BorderRadius.circular(10),
+                                                    ),
+                                                    child: Icon(
+                                                      Icons.arrow_forward_ios_rounded,
+                                                      color: connected ? AppTheme.connected : AppTheme.getPrimaryColor(context),
+                                                      size: 18,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ),
                                         ),
-                                        Expanded(
-                                          child: ServerTabs(isConnected: connected),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(24),
-                                child: BackdropFilter(
-                                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 800),
-                                    curve: Curves.easeInOut,
-                                    padding: const EdgeInsets.all(20),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.getCardColor(context).withOpacity(0.4),
-                                      borderRadius: BorderRadius.circular(24),
-                                      border: Border.all(
-                                        color: connected
-                                            ? AppTheme.connected.withOpacity(0.3)
-                                            : AppTheme.getPrimaryColor(context).withOpacity(0.3),
-                                        width: 1.5,
                                       ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: connected
-                                              ? AppTheme.connected.withOpacity(0.1)
-                                              : AppTheme.getPrimaryColor(context).withOpacity(0.1),
-                                          blurRadius: 20,
-                                          spreadRadius: 2,
-                                        ),
-                                      ],
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          width: 50,
-                                          height: 50,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                              color: connected
-                                                  ? AppTheme.connected.withOpacity(0.6)
-                                                  : AppTheme.getPrimaryColor(context).withOpacity(0.3),
-                                              width: 2,
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: AppTheme.getPrimaryColor(context).withOpacity(0.2),
-                                                blurRadius: 10,
-                                              ),
-                                            ],
-                                          ),
-                                          child: ClipOval(
-                                            child: serversProvider.selectedServer != null
-                                                ? Image.asset(
-                                              'assets/flags/${serversProvider.selectedServer!.countryCode.toLowerCase()}.png',
-                                              fit: BoxFit.cover,
-                                              cacheWidth: 100,
-                                              cacheHeight: 100,
-                                            )
-                                                : Container(
-                                              color: connected
-                                                  ? AppTheme.connected.withOpacity(0.1)
-                                                  : AppTheme.getPrimaryColor(context).withOpacity(0.1),
-                                              child: Icon(
-                                                Icons.public,
-                                                color: connected ? AppTheme.connected : AppTheme.getPrimaryColor(context),
-                                                size: 24,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "SECURE LOCATION",
-                                                style: GoogleFonts.poppins(
-                                                  color: AppTheme.getTextSecondaryColor(context),
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w600,
-                                                  letterSpacing: 1,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                serversProvider.selectedServer?.country ?? "Select Smart Server",
-                                                style: GoogleFonts.poppins(
-                                                  color: AppTheme.getTextPrimaryColor(context),
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color: connected
-                                                ? AppTheme.connected.withOpacity(0.2)
-                                                : AppTheme.getPrimaryColor(context).withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(10),
-                                          ),
-                                          child: Icon(
-                                            Icons.arrow_forward_ios_rounded,
-                                            color: connected ? AppTheme.connected : AppTheme.getPrimaryColor(context),
-                                            size: 18,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                    );
+                                  },
                                 ),
                               ),
-                            ),
-                          );
-                        },
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
               ),
             ],
@@ -1329,9 +1354,9 @@ void showEnhancedDisconnectDialog(BuildContext context, VoidCallback onConfirm) 
             Icon(
               Icons.warning_amber_rounded,
               color: AppTheme.warning,
-              size: 28,
+              size: 25,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 7),
             Text(
               "Stop Connection?",
               style: GoogleFonts.poppins(
@@ -1355,7 +1380,9 @@ void showEnhancedDisconnectDialog(BuildContext context, VoidCallback onConfirm) 
               "CANCEL",
               style: GoogleFonts.poppins(
                 color: AppTheme.getTextSecondaryColor(context),
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
+                fontSize: 15,
+
               ),
             ),
           ),
@@ -1365,7 +1392,7 @@ void showEnhancedDisconnectDialog(BuildContext context, VoidCallback onConfirm) 
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
             ),
             onPressed: () {
               Navigator.pop(c);
@@ -1375,7 +1402,9 @@ void showEnhancedDisconnectDialog(BuildContext context, VoidCallback onConfirm) 
               "DISCONNECT",
               style: GoogleFonts.poppins(
                 color: Colors.white,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+
               ),
             ),
           ),
