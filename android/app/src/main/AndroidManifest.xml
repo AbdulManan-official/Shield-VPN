@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.shieldvpn.secureproxy">
+    package="com.technosofts.shieldVpn">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -17,16 +17,16 @@
         android:name="android.hardware.touchscreen"
         android:required="false" />
     <application
-        android:label="Shield VPN : Secure Proxy"
+        android:label="Shield VPN"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <!-- Added this according to openvpn doc -->
         android:extractNativeLibs="true"
 
         <!-- Sample AdMob app ID: ca-app-pub-3940256099942544~3347511713 -->
-<!--        <meta-data-->
-<!--            android:name="com.google.android.gms.ads.APPLICATION_ID"-->
-<!--            android:value="ca-app-pub-3940256099942544~3347511713"/>-->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713"/>
 
         <service android:name="vn.hunghd.flutterdownloader.DownloadWorker"
             android:permission="android.permission.BIND_JOB_SERVICE"/>
