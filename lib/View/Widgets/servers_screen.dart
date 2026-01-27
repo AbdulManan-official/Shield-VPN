@@ -31,12 +31,21 @@ class ServersScreen extends StatefulWidget {
 
 class _ServersScreenState extends State<ServersScreen> {
   bool _hasInternetConnection = true;
+  List<VpnServer> _shuffledServers = [];
+  bool _isInitialized = false;
 
   void _onInternetConnectionChanged(bool isConnected) {
     if (mounted) {
       setState(() {
         _hasInternetConnection = isConnected;
       });
+    }
+  }
+
+  void _initializeServers() {
+    if (widget.servers.isNotEmpty && !_isInitialized) {
+      _shuffledServers = List.from(widget.servers)..shuffle();
+      _isInitialized = true;
     }
   }
 
@@ -189,7 +198,13 @@ class _ServersScreenState extends State<ServersScreen> {
   Widget build(BuildContext context) {
     return Consumer2<ServersProvider, VpnProvider>(
       builder: (context, controller, controllerVPN, child) {
-        if (controller.areServersLoading) {
+        // Initialize servers only when they're available
+        if (widget.servers.isNotEmpty) {
+          _initializeServers();
+        }
+
+        // Show loading state when servers are being fetched
+        if (controller.areServersLoading || (widget.servers.isEmpty && controller.freeServers.isNotEmpty)) {
           return Scaffold(
             backgroundColor: AppTheme.getBackgroundColor(context),
             body: Center(
@@ -213,7 +228,10 @@ class _ServersScreenState extends State<ServersScreen> {
               ),
             ),
           );
-        } else if (controller.freeServers.isEmpty) {
+        }
+
+        // Show empty state only when actually no servers (not loading)
+        else if (_shuffledServers.isEmpty && !controller.areServersLoading) {
           return Scaffold(
             backgroundColor: AppTheme.getBackgroundColor(context),
             body: Center(
@@ -295,6 +313,7 @@ class _ServersScreenState extends State<ServersScreen> {
           );
         }
 
+        // Show servers list
         return Scaffold(
           backgroundColor: AppTheme.getBackgroundColor(context),
           body: Column(
@@ -326,7 +345,7 @@ class _ServersScreenState extends State<ServersScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '${widget.servers.length} locations available',
+                            '${_shuffledServers.length} locations available',
                             style: GoogleFonts.poppins(
                               color: AppTheme.getTextSecondaryColor(context),
                               fontSize: 13,
@@ -376,11 +395,12 @@ class _ServersScreenState extends State<ServersScreen> {
                 child: ListView.builder(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                   physics: const BouncingScrollPhysics(),
-                  itemCount: widget.servers.length,
+                  itemCount: _shuffledServers.length,
                   cacheExtent: 500, // Optimize scrolling performance
                   itemBuilder: (context, index) {
-                    final server = widget.servers[index];
-                    final isSelected = controller.isServerSelected(server, index, widget.tab);
+                    final server = _shuffledServers[index];
+                    final originalIndex = widget.servers.indexOf(server);
+                    final isSelected = controller.isServerSelected(server, originalIndex, widget.tab);
 
                     return _ServerTile(
                       server: server,

@@ -140,6 +140,7 @@ class RecommendedServer extends StatefulWidget {
 class _RecommendedServerState extends State<RecommendedServer> {
   bool _hasInternetConnection = true;
   late List<VpnServer> _filteredServers;
+  late List<VpnServer> _shuffledServers;
 
   @override
   void initState() {
@@ -151,6 +152,9 @@ class _RecommendedServerState extends State<RecommendedServer> {
           country != 'united kingdom' &&
           country != 'uk';
     }).toList();
+
+    // Shuffle the filtered servers when the screen initializes
+    _shuffledServers = List.from(_filteredServers)..shuffle();
 
     InternetConnectionManager.initialize(_onInternetConnectionChanged);
   }
@@ -330,7 +334,7 @@ class _RecommendedServerState extends State<RecommendedServer> {
               ),
             ),
           );
-        } else if (_filteredServers.isEmpty) {
+        } else if (_shuffledServers.isEmpty) {
           return Scaffold(
             backgroundColor: AppTheme.getBackgroundColor(context),
             body: Center(
@@ -456,7 +460,7 @@ class _RecommendedServerState extends State<RecommendedServer> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '${_filteredServers.length * 2} fast locations',
+                            '${_shuffledServers.length * 2} fast locations',
                             style: GoogleFonts.poppins(
                               color: AppTheme.getTextSecondaryColor(context),
                               fontSize: 13,
@@ -506,12 +510,13 @@ class _RecommendedServerState extends State<RecommendedServer> {
                 child: ListView.builder(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                   physics: const BouncingScrollPhysics(),
-                  itemCount: _filteredServers.length * 2,
+                  itemCount: _shuffledServers.length * 2,
                   cacheExtent: 500,
                   itemBuilder: (context, index) {
-                    int adjustedIndex = index % _filteredServers.length;
-                    final server = _filteredServers[adjustedIndex];
-                    final isSelected = index == controller.getSelectedIndex() &&
+                    int adjustedIndex = index % _shuffledServers.length;
+                    final server = _shuffledServers[adjustedIndex];
+                    final originalIndex = _filteredServers.indexOf(server);
+                    final isSelected = originalIndex == controller.getSelectedIndex() &&
                         widget.tab == controller.getSelectedTab();
 
                     return _RecommendedServerTile(

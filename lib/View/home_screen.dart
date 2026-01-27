@@ -71,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _buttonPressController;
   late AnimationController _buttonMoveController;
   late AnimationController _borderAnimationController;
-
+  Timer? _connectionTimeoutTimer;
   // final AdsController adsController = Get.find();
   List<Particle> particles = [];
 
@@ -159,6 +159,7 @@ class _HomeScreenState extends State<HomeScreen>
       await serverInitFuture;
 
       // ✅ VPN Listener - Maps VPN stages to UI status
+      // ✅ VPN Listener - Maps VPN stages to UI status
       vpnConnectionProvider.addListener(() {
         if (!mounted) return;
 
@@ -176,11 +177,16 @@ class _HomeScreenState extends State<HomeScreen>
             if (!_progressController.isAnimating) {
               _progressController.repeat();
             }
+            // ✅ START TIMEOUT TIMER
+            _startConnectionTimeout();
           }
         }
 
         else if (stage == VPNStage.connected) {
           if (_vpnUiStatus != VpnUiStatus.connected) {
+            // ✅ CANCEL TIMEOUT TIMER - Connection successful
+            _cancelConnectionTimeout();
+
             setState(() => _vpnUiStatus = VpnUiStatus.connected);
             _progressController.stop();
             _progressController.reset();
@@ -191,12 +197,14 @@ class _HomeScreenState extends State<HomeScreen>
                 // ads.showInterstitial();
               }
             });
-
           }
         }
 
         else if (stage == VPNStage.disconnected || stage == VPNStage.error) {
           if (_vpnUiStatus != VpnUiStatus.disconnected) {
+            // ✅ CANCEL TIMEOUT TIMER - Connection failed
+            _cancelConnectionTimeout();
+
             setState(() => _vpnUiStatus = VpnUiStatus.disconnected);
             _progressController.stop();
             _progressController.reset();
@@ -209,7 +217,41 @@ class _HomeScreenState extends State<HomeScreen>
       });
     });
   }
+  void _startConnectionTimeout() {
+    // Cancel any existing timer first
+    _connectionTimeoutTimer?.cancel();
 
+    // Start new 15-second timer
+    _connectionTimeoutTimer = Timer(const Duration(seconds: 15), () async {
+      if (mounted && _vpnUiStatus == VpnUiStatus.connecting) {
+        // Still connecting after 15 seconds - timeout occurred
+
+        // ✅ GET VPN PROVIDER AND DISCONNECT (just like cancel button)
+        final vpnProvider = Provider.of<VpnConnectionProvider>(context, listen: false);
+        await vpnProvider.disconnect();
+
+        // Update UI state
+        setState(() => _vpnUiStatus = VpnUiStatus.disconnected);
+
+        // Stop and reset progress animation
+        _progressController.stop();
+        _progressController.reset();
+
+        // Show timeout message
+        showLogoToast(
+          "Connection timeout - Try with another server",
+          color: AppTheme.error,
+        );
+
+        debugPrint('🔴 Connection timeout after 15 seconds - VPN disconnected');
+      }
+    });
+  }
+
+  void _cancelConnectionTimeout() {
+    _connectionTimeoutTimer?.cancel();
+    _connectionTimeoutTimer = null;
+  }
   void _initializeParticles() {
     final random = Random();
     for (int i = 0; i < 50; i++) {
@@ -226,6 +268,9 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _handleCancelConnection(VpnConnectionProvider vpnValue) {
     debugPrint('🔴 User cancelled connection');
+
+    // ✅ CANCEL TIMEOUT TIMER
+    _cancelConnectionTimeout();
 
     // Disconnect the VPN
     vpnValue.disconnect();
@@ -480,6 +525,8 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void dispose() {
+    _connectionTimeoutTimer?.cancel(); // ✅ ADD THIS
+
     _pulseController.dispose();
     _meshController.dispose();
     _particleController.dispose();
@@ -698,15 +745,20 @@ class _HomeScreenState extends State<HomeScreen>
           setState(() => _vpnUiStatus = VpnUiStatus.connecting);
           _progressController.repeat();
 
-          // Connection timeout
-          Future.delayed(const Duration(seconds: 30), () {
-            if (mounted && _vpnUiStatus == VpnUiStatus.connecting) {
-              setState(() => _vpnUiStatus = VpnUiStatus.disconnected);
-              _progressController.stop();
-              _progressController.reset();
-              showLogoToast("Connection timeout - Please try again", color: AppTheme.error);
-            }
-          });
+          // // Connection timeout
+          // Future.delayed(const Duration(seconds: 30), () {
+          //   if (mounted && _vpnUiStatus == VpnUiStatus.connecting) {
+          //     setState(() => _vpnUiStatus = VpnUiStatus.disconnected);
+          //     _progressController.stop();
+          //     _progressController.reset();
+          //     showLogoToast("Connection timeout - Please try again", color: AppTheme.error);
+          //   }
+          // });
+
+
+// ✅ START 15-SECOND TIMEOUT
+          _startConnectionTimeout();
+
           final AppsController apps = Get.find();
           vpnValue.initPlatformState(
             serversProvider.selectedServer!.ovpn,
