@@ -4,11 +4,10 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b1d88a55-7d82-40b8-8630-180ff1b14dd0" name="Changes" comment="commnented purchase screen code">
+    <list default="true" id="b1d88a55-7d82-40b8-8630-180ff1b14dd0" name="Changes" comment="added random servers show and added toast of timeout .">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/Widgets/recommended_server_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/recommended_server_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/Widgets/servers_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/servers_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/home_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/home_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/View/more_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/more_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.lock" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -263,7 +262,15 @@
       <option name="project" value="LOCAL" />
       <updated>1769081741602</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="added random servers show and added toast of timeout .">
+      <option name="closed" value="true" />
+      <created>1769513855960</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1769513855961</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -296,6 +303,7 @@
     <MESSAGE value="add fix" />
     <MESSAGE value="ui fixed for old devices" />
     <MESSAGE value="commnented purchase screen code" />
-    <option name="LAST_COMMIT_MESSAGE" value="commnented purchase screen code" />
+    <MESSAGE value="added random servers show and added toast of timeout ." />
+    <option name="LAST_COMMIT_MESSAGE" value="added random servers show and added toast of timeout ." />
   </component>
 </project>

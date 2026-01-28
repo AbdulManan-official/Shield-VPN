@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:provider/provider.dart'; // ADD THIS
+import 'package:openvpn_flutter/openvpn_flutter.dart';
 import 'package:vpnsheild/View/premium_access_screen.dart';
 import 'package:vpnsheild/View/subscription_manager.dart';
 
 import '../providers/ads_controller.dart';
+import '../providers/vpn_connection_provider.dart'; // ADD THIS
 import '../utils/app_theme.dart';
+import '../utils/custom_toast.dart'; // ADD THIS
 import 'allowed_app_screen.dart' show AllowedAppsScreen;
 
 class MoreScreen extends StatefulWidget {
@@ -202,7 +206,21 @@ class _MoreScreenState extends State<MoreScreen> {
               icon: Icons.apps_rounded,
               title: 'App Filter',
               subtitle: 'Manage VPN for specific apps',
-              onTap: () => Get.to(() => AllowedAppsScreen()),
+              onTap: () {
+                // ✅ CHECK VPN STATUS BEFORE NAVIGATING
+                final vpnProvider = Provider.of<VpnConnectionProvider>(context, listen: false);
+
+                if (vpnProvider.stage == VPNStage.connected) {
+                  // VPN is connected - show toast and block navigation
+                  showLogoToast(
+                    "Disconnect VPN to access App Filter",
+                    color: AppTheme.warning,
+                  );
+                } else {
+                  // VPN is not connected - allow navigation
+                  Get.to(() => AllowedAppsScreen());
+                }
+              },
             ),
 
             const SizedBox(height: 12),
