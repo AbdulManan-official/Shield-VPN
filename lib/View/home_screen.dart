@@ -11,6 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:openvpn_flutter/openvpn_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vpnsheild/View/premium_access_screen.dart';
 import 'package:vpnsheild/View/server_tabs.dart';
 import 'package:vpnsheild/utils/custom_toast.dart';
 import 'package:vpnsheild/utils/app_theme.dart';
@@ -20,6 +21,7 @@ import '../providers/servers_provider.dart';
 import '../providers/vpn_connection_provider.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'more_screen.dart';
+
 
 // ✅ STEP 1: Define VPN Status Enum (ONE SOURCE OF TRUTH)
 enum VpnUiStatus {
@@ -72,14 +74,14 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _buttonMoveController;
   late AnimationController _borderAnimationController;
   Timer? _connectionTimeoutTimer;
-  // final AdsController adsController = Get.find();
+  final AdsController adsController = Get.find();
   List<Particle> particles = [];
 
   @override
   void initState() {
     super.initState();
 
-    // adsController.loadBanner();
+    adsController.loadBanner();
     WidgetsBinding.instance.addObserver(this);
 
     _pulseController = AnimationController(
@@ -159,7 +161,6 @@ class _HomeScreenState extends State<HomeScreen>
       await serverInitFuture;
 
       // ✅ VPN Listener - Maps VPN stages to UI status
-      // ✅ VPN Listener - Maps VPN stages to UI status
       vpnConnectionProvider.addListener(() {
         if (!mounted) return;
 
@@ -193,8 +194,8 @@ class _HomeScreenState extends State<HomeScreen>
             SharedPreferences.getInstance().then((prefs) => prefs.setBool('isConnected', true));
             Future.delayed(const Duration(milliseconds: 500), () {
               if (mounted) {
-                // final AdsController ads = Get.find();
-                // ads.showInterstitial();
+                final AdsController ads = Get.find();
+                ads.showInterstitial();
               }
             });
           }
@@ -522,6 +523,94 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
   }
+  Widget _buildPremiumBanner(bool connected) {
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 800),
+      curve: Curves.easeInOut,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 600),
+        opacity: connected ? 0.0 : 1.0,
+        child: connected
+            ? const SizedBox.shrink()
+            : GestureDetector(
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const PremiumAccessScreen()),
+            );
+          },
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.getPrimaryColor(context),
+                  AppTheme.getPrimaryColor(context).withOpacity(0.7),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.getPrimaryColor(context).withOpacity(0.3),
+                  blurRadius: 12,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.workspace_premium,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Go Premium",
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        "Ad-free & unlimited access",
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -745,15 +834,7 @@ class _HomeScreenState extends State<HomeScreen>
           setState(() => _vpnUiStatus = VpnUiStatus.connecting);
           _progressController.repeat();
 
-          // // Connection timeout
-          // Future.delayed(const Duration(seconds: 30), () {
-          //   if (mounted && _vpnUiStatus == VpnUiStatus.connecting) {
-          //     setState(() => _vpnUiStatus = VpnUiStatus.disconnected);
-          //     _progressController.stop();
-          //     _progressController.reset();
-          //     showLogoToast("Connection timeout - Please try again", color: AppTheme.error);
-          //   }
-          // });
+
 
 
 // ✅ START 15-SECOND TIMEOUT
@@ -1054,18 +1135,26 @@ class _HomeScreenState extends State<HomeScreen>
                               ),
 
                               // 🔹 Banner Ad
-                              // Obx(() {
-                              //   if (adsController.banner != null) {
-                              //     return Container(
-                              //       margin: const EdgeInsets.only(bottom: 20),
-                              //       alignment: Alignment.center,
-                              //       width: adsController.banner!.size.width.toDouble(),
-                              //       height: adsController.banner!.size.height.toDouble(),
-                              //       child: AdWidget(ad: adsController.banner!),
-                              //     );
-                              //   }
-                              //   return const SizedBox.shrink();
-                              // }),
+                              Column(
+                                children: [
+                                  // Existing Banner Ad
+                                  Obx(() {
+                                    if (adsController.banner != null) {
+                                      return Container(
+                                        margin: const EdgeInsets.only(bottom: 12),
+                                        alignment: Alignment.center,
+                                        width: adsController.banner!.size.width.toDouble(),
+                                        height: adsController.banner!.size.height.toDouble(),
+                                        child: AdWidget(ad: adsController.banner!),
+                                      );
+                                    }
+                                    return const SizedBox.shrink();
+                                  }),
+
+                                  // Premium Banner - Pass connected status
+                                  _buildPremiumBanner(connected),
+                                ],
+                              ),
 
                               // ✅ KEEP SPACER - it will work correctly inside IntrinsicHeight
                               const Spacer(flex: 4),

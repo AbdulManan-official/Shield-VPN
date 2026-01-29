@@ -45,7 +45,7 @@ void main() async {
 
   // Get.put(SubscriptionController(), permanent: true);
   Get.put(AppsController(), permanent: true);
-  // Get.put(AdsController(), permanent: true);
+  Get.put(AdsController(), permanent: true);
 
   initializeAdsAndConsent();
 
@@ -61,12 +61,12 @@ void main() async {
 }
 
 Future<void> initializeAdsAndConsent() async {
-  // final AdsController adsController = Get.find();
+  final AdsController adsController = Get.find();
   final initHelper = InitializationHelper();
   await initHelper.initialize();
-  // adsController.preloadInterstitial();
-  // adsController.loadBanner2();
-  // adsController.loadBanner();
+  adsController.preloadInterstitial();
+  adsController.loadBanner2();
+  adsController.loadBanner();
   try {
     final serversProvider = ServersProvider();
     await serversProvider.getServers();

@@ -23,7 +23,7 @@ class MoreScreen extends StatefulWidget {
 
 class _MoreScreenState extends State<MoreScreen> {
   // final SubscriptionController subscriptionManager = Get.find();
-  // final AdsController adsController = Get.find();
+  final AdsController adsController = Get.find();
 
   // void _showSubscriptionDialog(BuildContext context) {
   //   final hasSubscription = subscriptionManager.isSubscribed.value;
@@ -159,7 +159,7 @@ class _MoreScreenState extends State<MoreScreen> {
 
   @override
   void dispose() {
-    // adsController.disposeBanner2();
+    adsController.disposeBanner2();
     super.dispose();
   }
 
@@ -256,29 +256,29 @@ class _MoreScreenState extends State<MoreScreen> {
             const SizedBox(height: 24),
 
             // Banner Ad
-            // Obx(() {
-            //   if (!adsController.isBannerAd2Loaded.value && adsController.banner2 == null) {
-            //     return const SizedBox();
-            //   }
-            //
-            //   return Container(
-            //     margin: const EdgeInsets.only(bottom: 20),
-            //     decoration: BoxDecoration(
-            //       borderRadius: BorderRadius.circular(16),
-            //       border: Border.all(
-            //         color: AppTheme.getPrimaryColor(context).withOpacity(0.2),
-            //       ),
-            //     ),
-            //     child: ClipRRect(
-            //       borderRadius: BorderRadius.circular(16),
-            //       child: SizedBox(
-            //         width: adsController.banner2!.size.width.toDouble(),
-            //         height: adsController.banner2!.size.height.toDouble(),
-            //         child: AdWidget(ad: adsController.banner2!),
-            //       ),
-            //     ),
-            //   );
-            // }),
+            Obx(() {
+              if (!adsController.isBannerAd2Loaded.value && adsController.banner2 == null) {
+                return const SizedBox();
+              }
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppTheme.getPrimaryColor(context).withOpacity(0.2),
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: SizedBox(
+                    width: adsController.banner2!.size.width.toDouble(),
+                    height: adsController.banner2!.size.height.toDouble(),
+                    child: AdWidget(ad: adsController.banner2!),
+                  ),
+                ),
+              );
+            }),
           ],
         ),
       ),
