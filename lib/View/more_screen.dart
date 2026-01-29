@@ -191,6 +191,7 @@ class _MoreScreenState extends State<MoreScreen> {
         child: Column(
           children: [
             const SizedBox(height: 16),
+            _buildPremiumBanner(),
 
             // Premium Card
             // Obx(() {
@@ -412,7 +413,100 @@ class _MoreScreenState extends State<MoreScreen> {
   //     ),
   //   );
   // }
+  Widget _buildPremiumBanner() {
+    final isDark = AppTheme.isDarkMode(context);
 
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PremiumAccessScreen()),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark
+                ? [AppTheme.primaryDark, AppTheme.accentDark]
+                : [AppTheme.primaryLight, AppTheme.accentLight],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: AppTheme.getPrimaryColor(context).withOpacity(0.3),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.getPrimaryColor(context).withOpacity(0.3),
+              blurRadius: 15,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(isDark ? 0.15 : 0.2),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Icon(
+                Icons.workspace_premium,
+                color: Colors.white,
+                size: 32,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Upgrade to Premium",
+                    style: GoogleFonts.poppins(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Unlock all features & remove ads",
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                "GET",
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.getPrimaryColor(context),
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ],
+
+        ),
+      ),
+    );
+  }
   Widget _buildSettingsTile(
       BuildContext context, {
         required IconData icon,
