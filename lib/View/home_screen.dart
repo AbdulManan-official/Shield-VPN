@@ -547,7 +547,7 @@ class _HomeScreenState extends State<HomeScreen>
               gradient: LinearGradient(
                 colors: [
                   AppTheme.getPrimaryColor(context),
-                  AppTheme.getPrimaryColor(context).withOpacity(0.7),
+                  AppTheme.getPrimaryColor(context).withOpacity(0.8),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -799,7 +799,7 @@ class _HomeScreenState extends State<HomeScreen>
 
         if (connected) {
           showEnhancedDisconnectDialog(context, () async {
-            // adsController.showInterstitial();
+            adsController.showInterstitial();
             await vpnValue.disconnect();
             SharedPreferences prefs = await SharedPreferences.getInstance();
             await prefs.setBool('isConnected', false);
@@ -807,7 +807,25 @@ class _HomeScreenState extends State<HomeScreen>
             _progressController.reset();
             showLogoToast("Disconnected", color: AppTheme.error);
           });
-        } else {
+        }
+        //smooth animation for button come on his place then ad show
+        // if (connected) {
+        //   showEnhancedDisconnectDialog(context, () async {
+        //     await vpnValue.disconnect();
+        //     SharedPreferences prefs = await SharedPreferences.getInstance();
+        //     await prefs.setBool('isConnected', false);
+        //     setState(() => _vpnUiStatus = VpnUiStatus.disconnected);
+        //     _progressController.reset();
+        //     showLogoToast("Disconnected", color: AppTheme.error);
+        //
+        //     // ✅ Show ad after disconnect completes
+        //     Future.delayed(const Duration(milliseconds: 500), () {
+        //       adsController.showInterstitial();
+        //     });
+        //   });
+        // }
+
+        else {
           if (serversProvider.freeServers.isEmpty) {
             showLogoToast("Loading servers...", color: AppTheme.warning);
             await serversProvider.getServers();

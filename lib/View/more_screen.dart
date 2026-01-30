@@ -3,15 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:provider/provider.dart'; // ADD THIS
+import 'package:provider/provider.dart';
 import 'package:openvpn_flutter/openvpn_flutter.dart';
 import 'package:vpnsheild/View/premium_access_screen.dart';
 import 'package:vpnsheild/View/subscription_manager.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../providers/ads_controller.dart';
-import '../providers/vpn_connection_provider.dart'; // ADD THIS
+import '../providers/vpn_connection_provider.dart';
 import '../utils/app_theme.dart';
-import '../utils/custom_toast.dart'; // ADD THIS
+import '../utils/custom_toast.dart';
 import 'allowed_app_screen.dart' show AllowedAppsScreen;
 
 class MoreScreen extends StatefulWidget {
@@ -24,6 +26,57 @@ class MoreScreen extends StatefulWidget {
 class _MoreScreenState extends State<MoreScreen> {
   // final SubscriptionController subscriptionManager = Get.find();
   final AdsController adsController = Get.find();
+
+  // App constants
+  static const String appUrl = 'https://play.google.com/store/apps/details?id=com.technosofts.shieldVpn';
+  static const String appName = 'Shield VPN';
+  static const String supportEmail = 'technosofts.net@gmail.com';
+
+  @override
+  void initState() {
+    super.initState();
+    // Load banner ad when screen initializes
+    adsController.loadBanner2();
+  }
+
+  // Share app function
+  void _shareApp() {
+    Share.share(
+      'Check out $appName - Your ultimate VPN solution!\n\nDownload now: $appUrl',
+      subject: 'Try $appName',
+    );
+  }
+
+  // Rate app function
+  Future<void> _rateApp() async {
+    final Uri url = Uri.parse(appUrl);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      showLogoToast(
+        "Could not open Play Store",
+        color: AppTheme.warning,
+      );
+    }
+  }
+
+  // Contact us via email
+  Future<void> _contactUs() async {
+    final Uri emailUri = Uri(
+      scheme: 'mailto',
+      path: supportEmail,
+      query: 'subject=Feedback for $appName',
+    );
+
+    if (await canLaunchUrl(emailUri)) {
+      await launchUrl(emailUri);
+    } else {
+      showLogoToast(
+        "Could not open email app",
+        color: AppTheme.warning,
+      );
+    }
+  }
 
   // void _showSubscriptionDialog(BuildContext context) {
   //   final hasSubscription = subscriptionManager.isSubscribed.value;
@@ -186,101 +239,115 @@ class _MoreScreenState extends State<MoreScreen> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          children: [
-            const SizedBox(height: 16),
-            _buildPremiumBanner(),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              _buildPremiumBanner(),
 
-            // Premium Card
-            // Obx(() {
-            //   final isSubscribed = subscriptionManager.isSubscribed.value;
-            //   return _buildPremiumCard(context, isSubscribed);
-            // }),
+              // Premium Card
+              // Obx(() {
+              //   final isSubscribed = subscriptionManager.isSubscribed.value;
+              //   return _buildPremiumCard(context, isSubscribed);
+              // }),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
-            // Settings List
-            _buildSettingsTile(
-              context,
-              icon: Icons.apps_rounded,
-              title: 'App Filter',
-              subtitle: 'Manage VPN for specific apps',
-              onTap: () {
-                // ✅ CHECK VPN STATUS BEFORE NAVIGATING
-                final vpnProvider = Provider.of<VpnConnectionProvider>(context, listen: false);
+              // Banner Ad - Below Premium Section
+              Obx(() {
+                final banner = adsController.banner2;
+                final isLoaded = adsController.isBannerAd2Loaded.value;
 
-                if (vpnProvider.stage == VPNStage.connected) {
-                  // VPN is connected - show toast and block navigation
-                  showLogoToast(
-                    "Disconnect VPN to access App Filter",
-                    color: AppTheme.warning,
-                  );
-                } else {
-                  // VPN is not connected - allow navigation
-                  Get.to(() => AllowedAppsScreen());
+                if (!isLoaded || banner == null) {
+                  return const SizedBox();
                 }
-              },
-            ),
 
-            const SizedBox(height: 12),
-
-            _buildSettingsTile(
-              context,
-              icon: Icons.share_rounded,
-              title: 'Share App',
-              subtitle: 'Tell your friends about VPN Max',
-              onTap: () {},
-            ),
-
-            const SizedBox(height: 12),
-
-            _buildSettingsTile(
-              context,
-              icon: Icons.feedback_rounded,
-              title: 'Feedback',
-              subtitle: 'Share your thoughts with us',
-              onTap: () {},
-            ),
-
-            const SizedBox(height: 12),
-
-            _buildSettingsTile(
-              context,
-              icon: Icons.system_update_rounded,
-              title: 'Check for Updates',
-              subtitle: 'Get the latest version',
-              onTap: () {},
-            ),
-
-            const SizedBox(height: 24),
-
-            // Banner Ad
-            Obx(() {
-              if (!adsController.isBannerAd2Loaded.value && adsController.banner2 == null) {
-                return const SizedBox();
-              }
-
-              return Container(
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppTheme.getPrimaryColor(context).withOpacity(0.2),
+                return Container(
+                  key: ValueKey(banner.hashCode), // Unique key for each ad instance
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppTheme.getPrimaryColor(context).withOpacity(0.2),
+                    ),
                   ),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: SizedBox(
-                    width: adsController.banner2!.size.width.toDouble(),
-                    height: adsController.banner2!.size.height.toDouble(),
-                    child: AdWidget(ad: adsController.banner2!),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: SizedBox(
+                      width: banner.size.width.toDouble(),
+                      height: banner.size.height.toDouble(),
+                      child: AdWidget(ad: banner),
+                    ),
                   ),
-                ),
-              );
-            }),
-          ],
+                );
+              }),
+
+              // Settings List
+              _buildSettingsTile(
+                context,
+                icon: Icons.apps_rounded,
+                title: 'App Filter',
+                subtitle: 'Manage VPN for specific apps',
+                onTap: () {
+                  final vpnProvider = Provider.of<VpnConnectionProvider>(context, listen: false);
+
+                  if (vpnProvider.stage == VPNStage.connected) {
+                    showLogoToast(
+                      "Disconnect VPN to access App Filter",
+                      color: AppTheme.warning,
+                    );
+                  } else {
+                    Get.to(() => AllowedAppsScreen());
+                  }
+                },
+              ),
+
+              const SizedBox(height: 10),
+
+              _buildSettingsTile(
+                context,
+                icon: Icons.share_rounded,
+                title: 'Share App',
+                subtitle: 'Tell your friends about $appName',
+                onTap: _shareApp,
+              ),
+
+              const SizedBox(height: 10),
+
+              _buildSettingsTile(
+                context,
+                icon: Icons.star_rounded,
+                title: 'Rate this App',
+                subtitle: 'Support us with 5 stars',
+                onTap: _rateApp,
+              ),
+
+              const SizedBox(height: 10),
+
+              _buildSettingsTile(
+                context,
+                icon: Icons.email_rounded,
+                title: 'Contact Us',
+                subtitle: 'Share your thoughts with us',
+                onTap: _contactUs,
+              ),
+
+              const SizedBox(height: 10),
+
+              _buildSettingsTile(
+                context,
+                icon: Icons.system_update_rounded,
+                title: 'Check for Updates',
+                subtitle: 'Get the latest version',
+                onTap: _rateApp,
+              ),
+
+              // Bottom safe area padding
+              SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
+            ],
+          ),
         ),
       ),
     );
@@ -413,6 +480,7 @@ class _MoreScreenState extends State<MoreScreen> {
   //     ),
   //   );
   // }
+
   Widget _buildPremiumBanner() {
     final isDark = AppTheme.isDarkMode(context);
 
@@ -424,8 +492,7 @@ class _MoreScreenState extends State<MoreScreen> {
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isDark
@@ -434,7 +501,7 @@ class _MoreScreenState extends State<MoreScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: AppTheme.getPrimaryColor(context).withOpacity(0.3),
             width: 1.5,
@@ -458,7 +525,7 @@ class _MoreScreenState extends State<MoreScreen> {
               child: const Icon(
                 Icons.workspace_premium,
                 color: Colors.white,
-                size: 32,
+                size: 30,
               ),
             ),
             const SizedBox(width: 16),
@@ -469,7 +536,7 @@ class _MoreScreenState extends State<MoreScreen> {
                   Text(
                     "Upgrade to Premium",
                     style: GoogleFonts.poppins(
-                      fontSize: 17,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
@@ -478,7 +545,7 @@ class _MoreScreenState extends State<MoreScreen> {
                   Text(
                     "Unlock all features & remove ads",
                     style: GoogleFonts.poppins(
-                      fontSize: 13,
+                      fontSize: 12,
                       color: Colors.white.withOpacity(0.9),
                     ),
                   ),
@@ -502,11 +569,11 @@ class _MoreScreenState extends State<MoreScreen> {
               ),
             ),
           ],
-
         ),
       ),
     );
   }
+
   Widget _buildSettingsTile(
       BuildContext context, {
         required IconData icon,
@@ -518,27 +585,27 @@ class _MoreScreenState extends State<MoreScreen> {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         splashColor: AppTheme.getPrimaryColor(context).withOpacity(0.1),
         highlightColor: AppTheme.getPrimaryColor(context).withOpacity(0.05),
         child: Ink(
           decoration: BoxDecoration(
             color: AppTheme.getCardColor(context).withOpacity(0.6),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(
               color: AppTheme.getPrimaryColor(context).withOpacity(0.2),
             ),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(18),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(14),
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: AppTheme.getPrimaryColor(context).withOpacity(0.15),
                         borderRadius: BorderRadius.circular(12),
@@ -546,10 +613,10 @@ class _MoreScreenState extends State<MoreScreen> {
                       child: Icon(
                         icon,
                         color: AppTheme.getPrimaryColor(context),
-                        size: 24,
+                        size: 22,
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -557,7 +624,7 @@ class _MoreScreenState extends State<MoreScreen> {
                           Text(
                             title,
                             style: GoogleFonts.poppins(
-                              fontSize: 15,
+                              fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: AppTheme.getTextPrimaryColor(context),
                             ),
@@ -566,7 +633,7 @@ class _MoreScreenState extends State<MoreScreen> {
                           Text(
                             subtitle,
                             style: GoogleFonts.poppins(
-                              fontSize: 12,
+                              fontSize: 11,
                               color: AppTheme.getTextSecondaryColor(context),
                             ),
                           ),
@@ -576,7 +643,7 @@ class _MoreScreenState extends State<MoreScreen> {
                     Icon(
                       Icons.arrow_forward_ios_rounded,
                       color: AppTheme.getPrimaryColor(context),
-                      size: 18,
+                      size: 16,
                     ),
                   ],
                 ),
