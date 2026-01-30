@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:developer';
 
-// import 'package:firebase_analytics/firebase_analytics.dart';
-// import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -37,7 +37,7 @@ void main() async {
     systemNavigationBarIconBrightness: Brightness.dark,
   ));
 
-  // await Firebase.initializeApp();
+  await Firebase.initializeApp();
 
   await Workmanager().initialize(callbackDispatcher);
 
@@ -120,9 +120,9 @@ class _MyAppState extends State<MyApp> {
 
   StreamSubscription<List<PurchaseDetails>>? _purchaseSubscription;
   //
-  // static FirebaseAnalytics analytics = FirebaseAnalytics.instance;
-  // static FirebaseAnalyticsObserver observer =
-  // FirebaseAnalyticsObserver(analytics: analytics);
+  static FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+  static FirebaseAnalyticsObserver observer =
+  FirebaseAnalyticsObserver(analytics: analytics);
 
   @override
   void initState() {
@@ -193,7 +193,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       navigatorKey: rootNavigatorKey,
-      // navigatorObservers: <NavigatorObserver>[observer],
+      navigatorObservers: <NavigatorObserver>[observer],
       title: 'Shield VPN',
       debugShowCheckedModeBanner: false,
 

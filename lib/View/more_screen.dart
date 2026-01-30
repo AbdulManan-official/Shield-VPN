@@ -273,13 +273,10 @@ class _MoreScreenState extends State<MoreScreen> {
                       color: AppTheme.getPrimaryColor(context).withOpacity(0.2),
                     ),
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: SizedBox(
-                      width: banner.size.width.toDouble(),
-                      height: banner.size.height.toDouble(),
-                      child: AdWidget(ad: banner),
-                    ),
+                  child: SizedBox(
+                    width: banner.size.width.toDouble(),
+                    height: banner.size.height.toDouble(),
+                    child: AdWidget(ad: banner),
                   ),
                 );
               }),
