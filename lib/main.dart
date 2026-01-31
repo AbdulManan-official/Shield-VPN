@@ -221,9 +221,13 @@ class _MyAppState extends State<MyApp> {
 
         final currentTextScale = mediaQuery.textScaler.scale(1.0);
         final clampedTextScale = (currentTextScale * textScaleFactor).clamp(
-          0.7,
-          1.4,
+          0.5,
+          1.11,
         );
+        // final clampedTextScale = (currentTextScale * textScaleFactor).clamp(
+        //   0.7,
+        //   1.4,
+        // );
 
         return MediaQuery(
           data: mediaQuery.copyWith(
