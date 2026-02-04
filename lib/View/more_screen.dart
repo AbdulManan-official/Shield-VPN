@@ -245,7 +245,7 @@ class _MoreScreenState extends State<MoreScreen> {
           child: Column(
             children: [
               const SizedBox(height: 12),
-              _buildPremiumBanner(),
+              // _buildPremiumBanner(),
 
               // Premium Card
               // Obx(() {
@@ -256,30 +256,30 @@ class _MoreScreenState extends State<MoreScreen> {
               const SizedBox(height: 16),
 
               // Banner Ad - Below Premium Section
-              Obx(() {
-                final banner = adsController.banner2;
-                final isLoaded = adsController.isBannerAd2Loaded.value;
-
-                if (!isLoaded || banner == null) {
-                  return const SizedBox();
-                }
-
-                return Container(
-                  key: ValueKey(banner.hashCode), // Unique key for each ad instance
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: AppTheme.getPrimaryColor(context).withOpacity(0.2),
-                    ),
-                  ),
-                  child: SizedBox(
-                    width: banner.size.width.toDouble(),
-                    height: banner.size.height.toDouble(),
-                    child: AdWidget(ad: banner),
-                  ),
-                );
-              }),
+              // Obx(() {
+              //   final banner = adsController.banner2;
+              //   final isLoaded = adsController.isBannerAd2Loaded.value;
+              //
+              //   if (!isLoaded || banner == null) {
+              //     return const SizedBox();
+              //   }
+              //
+              //   return Container(
+              //     key: ValueKey(banner.hashCode), // Unique key for each ad instance
+              //     margin: const EdgeInsets.only(bottom: 16),
+              //     decoration: BoxDecoration(
+              //       borderRadius: BorderRadius.circular(16),
+              //       border: Border.all(
+              //         color: AppTheme.getPrimaryColor(context).withOpacity(0.2),
+              //       ),
+              //     ),
+              //     child: SizedBox(
+              //       width: banner.size.width.toDouble(),
+              //       height: banner.size.height.toDouble(),
+              //       child: AdWidget(ad: banner),
+              //     ),
+              //   );
+              // }),
 
               // Settings List
               _buildSettingsTile(
@@ -478,98 +478,98 @@ class _MoreScreenState extends State<MoreScreen> {
   //   );
   // }
 
-  Widget _buildPremiumBanner() {
-    final isDark = AppTheme.isDarkMode(context);
-
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const PremiumAccessScreen()),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isDark
-                ? [AppTheme.primaryDark, AppTheme.accentDark]
-                : [AppTheme.primaryLight, AppTheme.accentLight],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: AppTheme.getPrimaryColor(context).withOpacity(0.3),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.getPrimaryColor(context).withOpacity(0.3),
-              blurRadius: 15,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(isDark ? 0.15 : 0.2),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(
-                Icons.workspace_premium,
-                color: Colors.white,
-                size: 30,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Upgrade to Premium",
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "Unlock all features & remove ads",
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: Colors.white.withOpacity(0.9),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                "GET",
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.getPrimaryColor(context),
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // Widget _buildPremiumBanner() {
+  //   final isDark = AppTheme.isDarkMode(context);
+  //
+  //   return GestureDetector(
+  //     onTap: () {
+  //       Navigator.push(
+  //         context,
+  //         MaterialPageRoute(builder: (context) => const PremiumAccessScreen()),
+  //       );
+  //     },
+  //     child: Container(
+  //       padding: const EdgeInsets.all(18),
+  //       decoration: BoxDecoration(
+  //         gradient: LinearGradient(
+  //           colors: isDark
+  //               ? [AppTheme.primaryDark, AppTheme.accentDark]
+  //               : [AppTheme.primaryLight, AppTheme.accentLight],
+  //           begin: Alignment.topLeft,
+  //           end: Alignment.bottomRight,
+  //         ),
+  //         borderRadius: BorderRadius.circular(18),
+  //         border: Border.all(
+  //           color: AppTheme.getPrimaryColor(context).withOpacity(0.3),
+  //           width: 1.5,
+  //         ),
+  //         boxShadow: [
+  //           BoxShadow(
+  //             color: AppTheme.getPrimaryColor(context).withOpacity(0.3),
+  //             blurRadius: 15,
+  //             spreadRadius: 2,
+  //           ),
+  //         ],
+  //       ),
+  //       child: Row(
+  //         children: [
+  //           Container(
+  //             padding: const EdgeInsets.all(12),
+  //             decoration: BoxDecoration(
+  //               color: Colors.white.withOpacity(isDark ? 0.15 : 0.2),
+  //               borderRadius: BorderRadius.circular(14),
+  //             ),
+  //             child: const Icon(
+  //               Icons.workspace_premium,
+  //               color: Colors.white,
+  //               size: 30,
+  //             ),
+  //           ),
+  //           const SizedBox(width: 16),
+  //           Expanded(
+  //             child: Column(
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               children: [
+  //                 Text(
+  //                   "Upgrade to Premium",
+  //                   style: GoogleFonts.poppins(
+  //                     fontSize: 16,
+  //                     fontWeight: FontWeight.bold,
+  //                     color: Colors.white,
+  //                   ),
+  //                 ),
+  //                 const SizedBox(height: 4),
+  //                 Text(
+  //                   "Unlock all features & remove ads",
+  //                   style: GoogleFonts.poppins(
+  //                     fontSize: 12,
+  //                     color: Colors.white.withOpacity(0.9),
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //           Container(
+  //             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+  //             decoration: BoxDecoration(
+  //               color: Colors.white,
+  //               borderRadius: BorderRadius.circular(12),
+  //             ),
+  //             child: Text(
+  //               "GET",
+  //               style: GoogleFonts.poppins(
+  //                 fontSize: 13,
+  //                 fontWeight: FontWeight.bold,
+  //                 color: AppTheme.getPrimaryColor(context),
+  //                 letterSpacing: 0.5,
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildSettingsTile(
       BuildContext context, {

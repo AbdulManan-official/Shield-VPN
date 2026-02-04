@@ -420,6 +420,7 @@ class _ServersScreenState extends State<ServersScreen> {
 }
 
 // Separate widget for better performance
+// Separate widget for better performance
 class _ServerTile extends StatelessWidget {
   final VpnServer server;
   final bool isSelected;
@@ -511,6 +512,18 @@ class _ServerTile extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
+                        // Show state if available
+                        if (server.state.isNotEmpty)
+                          Text(
+                            server.state,
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              color: AppTheme.getTextSecondaryColor(context),
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        if (server.state.isNotEmpty)
+                          const SizedBox(height: 4),
                         Row(
                           children: [
                             Container(

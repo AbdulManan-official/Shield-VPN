@@ -193,10 +193,10 @@ class _HomeScreenState extends State<HomeScreen>
             _progressController.reset();
             SharedPreferences.getInstance().then((prefs) => prefs.setBool('isConnected', true));
             Future.delayed(const Duration(milliseconds: 500), () {
-              if (mounted) {
-                final AdsController ads = Get.find();
-                ads.showInterstitial();
-              }
+            //   if (mounted) {
+            //     final AdsController ads = Get.find();
+            //     ads.showInterstitial();
+            //   }
             });
           }
         }
@@ -799,7 +799,7 @@ class _HomeScreenState extends State<HomeScreen>
 
         if (connected) {
           showEnhancedDisconnectDialog(context, () async {
-            adsController.showInterstitial();
+            // adsController.showInterstitial();
             await vpnValue.disconnect();
             SharedPreferences prefs = await SharedPreferences.getInstance();
             await prefs.setBool('isConnected', false);

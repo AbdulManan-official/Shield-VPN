@@ -140,7 +140,7 @@ class RecommendedServer extends StatefulWidget {
 class _RecommendedServerState extends State<RecommendedServer> {
   bool _hasInternetConnection = true;
   late List<VpnServer> _filteredServers;
-  late List<VpnServer> _shuffledServers;
+  late List<VpnServer> _displayedServers;
 
   @override
   void initState() {
@@ -153,10 +153,30 @@ class _RecommendedServerState extends State<RecommendedServer> {
           country != 'uk';
     }).toList();
 
-    // Shuffle the filtered servers when the screen initializes
-    _shuffledServers = List.from(_filteredServers)..shuffle();
+    // Get 5 random servers initially
+    _displayedServers = _getRandomServers();
 
     InternetConnectionManager.initialize(_onInternetConnectionChanged);
+  }
+
+  // Method to get 5 random servers from filtered list
+  List<VpnServer> _getRandomServers() {
+    if (_filteredServers.isEmpty) return [];
+    if (_filteredServers.length <= 5) return List.from(_filteredServers);
+
+    List<VpnServer> shuffled = List.from(_filteredServers)..shuffle();
+    return shuffled.take(5).toList();
+  }
+
+  // Method to refresh servers
+  Future<void> _refreshServers() async {
+    await Future.delayed(const Duration(milliseconds: 500)); // Small delay for UX
+    if (mounted) {
+      setState(() {
+        _displayedServers = _getRandomServers();
+      });
+      ToastHelper.showSuccess('Servers refreshed');
+    }
   }
 
   @override
@@ -334,7 +354,7 @@ class _RecommendedServerState extends State<RecommendedServer> {
               ),
             ),
           );
-        } else if (_shuffledServers.isEmpty) {
+        } else if (_displayedServers.isEmpty) {
           return Scaffold(
             backgroundColor: AppTheme.getBackgroundColor(context),
             body: Center(
@@ -418,117 +438,123 @@ class _RecommendedServerState extends State<RecommendedServer> {
 
         return Scaffold(
           backgroundColor: AppTheme.getBackgroundColor(context),
-          body: Column(
-            children: [
-              // Modern Minimal Header with Star Icon
-              Container(
-                margin: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                decoration: BoxDecoration(
-                  color: AppTheme.getCardColor(context),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppTheme.getPrimaryColor(context).withOpacity(0.15),
+          body: RefreshIndicator(
+            onRefresh: _refreshServers,
+            color: AppTheme.getPrimaryColor(context),
+            backgroundColor: AppTheme.getCardColor(context),
+            child: Column(
+              children: [
+                // Modern Minimal Header with Star Icon
+                Container(
+                  margin: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.getCardColor(context),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppTheme.getPrimaryColor(context).withOpacity(0.15),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppTheme.getPrimaryColor(context).withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.star_rounded,
+                          color: AppTheme.getPrimaryColor(context),
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Select Server',
+                              style: GoogleFonts.poppins(
+                                color: AppTheme.getTextPrimaryColor(context),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${_displayedServers.length} fast locations',
+                              style: GoogleFonts.poppins(
+                                color: AppTheme.getTextSecondaryColor(context),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _hasInternetConnection
+                              ? AppTheme.success.withOpacity(0.1)
+                              : AppTheme.error.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 5,
+                              height: 5,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: _hasInternetConnection ? AppTheme.success : AppTheme.error,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              _hasInternetConnection ? 'Online' : 'Offline',
+                              style: GoogleFonts.poppins(
+                                color: _hasInternetConnection ? AppTheme.success : AppTheme.error,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppTheme.getPrimaryColor(context).withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.star_rounded,
-                        color: AppTheme.getPrimaryColor(context),
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Select Server',
-                            style: GoogleFonts.poppins(
-                              color: AppTheme.getTextPrimaryColor(context),
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '${_shuffledServers.length * 2} fast locations',
-                            style: GoogleFonts.poppins(
-                              color: AppTheme.getTextSecondaryColor(context),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: _hasInternetConnection
-                            ? AppTheme.success.withOpacity(0.1)
-                            : AppTheme.error.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 5,
-                            height: 5,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: _hasInternetConnection ? AppTheme.success : AppTheme.error,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            _hasInternetConnection ? 'Online' : 'Offline',
-                            style: GoogleFonts.poppins(
-                              color: _hasInternetConnection ? AppTheme.success : AppTheme.error,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
 
-              // Optimized Server List
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: _shuffledServers.length * 2,
-                  cacheExtent: 500,
-                  itemBuilder: (context, index) {
-                    int adjustedIndex = index % _shuffledServers.length;
-                    final server = _shuffledServers[adjustedIndex];
-                    final originalIndex = _filteredServers.indexOf(server);
-                    final isSelected = originalIndex == controller.getSelectedIndex() &&
-                        widget.tab == controller.getSelectedTab();
+                // Optimized Server List with Pull to Refresh
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics(),
+                    ),
+                    itemCount: _displayedServers.length,
+                    cacheExtent: 500,
+                    itemBuilder: (context, index) {
+                      final server = _displayedServers[index];
+                      final originalIndex = _filteredServers.indexOf(server);
+                      final isSelected = originalIndex == controller.getSelectedIndex() &&
+                          widget.tab == controller.getSelectedTab();
 
-                    return _RecommendedServerTile(
-                      server: server,
-                      isSelected: isSelected,
-                      isConnected: widget.isConnected,
-                      onTap: () => onServerClicked(server),
-                    );
-                  },
+                      return _RecommendedServerTile(
+                        server: server,
+                        isSelected: isSelected,
+                        isConnected: widget.isConnected,
+                        onTap: () => onServerClicked(server),
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -615,10 +641,6 @@ class _RecommendedServerTile extends StatelessWidget {
                           ),
                         ),
                       ),
-                      // Star badge
-
-
-
                     ],
                   ),
                   const SizedBox(width: 14),
@@ -637,6 +659,18 @@ class _RecommendedServerTile extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
+                        // Show state if available
+                        if (server.state.isNotEmpty)
+                          Text(
+                            server.state,
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              color: AppTheme.getTextSecondaryColor(context),
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        if (server.state.isNotEmpty)
+                          const SizedBox(height: 4),
                         Row(
                           children: [
                             Container(
