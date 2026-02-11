@@ -1,3 +1,6 @@
+
+
+// thatd my email  vpnapp@technosofts.net . also pls make sure u will design a normal ui that show as a bottom sheet type on homescreen . redeisgn it . white bg 2 thumbs . when upper one clicks open app review section for review . and if clicked the lower then show 2 buttons like not now and send feedback . if feedback clicked then open te email . also tahts. amke these changes . also linking a screenshot of sample ui that is needed . and make sure repsosinve for evwery device by using media query and also take control on text font size scale . can u do this pls give upadetd code of screen
 // import 'dart:math';
 //
 // import 'package:flutter/material.dart';

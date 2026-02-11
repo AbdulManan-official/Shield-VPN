@@ -20,6 +20,7 @@ import '../providers/apps_provider.dart';
 import '../providers/servers_provider.dart';
 import '../providers/vpn_connection_provider.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:vpnsheild/utils/vpn_app_review.dart';
 import 'more_screen.dart';
 
 
@@ -806,6 +807,9 @@ class _HomeScreenState extends State<HomeScreen>
             setState(() => _vpnUiStatus = VpnUiStatus.disconnected);
             _progressController.reset();
             showLogoToast("Disconnected", color: AppTheme.error);
+            if (mounted) {
+              await VpnAppReview.tryShowOnDisconnect(context);
+            }
           });
         }
         //smooth animation for button come on his place then ad show

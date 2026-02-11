@@ -30,7 +30,7 @@ class _MoreScreenState extends State<MoreScreen> {
   // App constants
   static const String appUrl = 'https://play.google.com/store/apps/details?id=com.technosofts.shieldVpn';
   static const String appName = 'Shield VPN';
-  static const String supportEmail = 'technosofts.net@gmail.com';
+  static const String supportEmail = 'vpnapp@technosofts.net';
 
   @override
   void initState() {

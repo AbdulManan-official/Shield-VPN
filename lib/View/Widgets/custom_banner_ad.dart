@@ -19,7 +19,7 @@
 // import '../providers/servers_provider.dart';
 // import '../providers/vpn_connection_provider.dart';
 // import '../utils/analytics_service.dart';
-// import '../utils/rating_service.dart';
+// import '../utils/vpn_app_review.dart';
 // import 'more_screen.dart';
 //
 // class Particle {

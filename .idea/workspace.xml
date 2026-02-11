@@ -4,16 +4,12 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b1d88a55-7d82-40b8-8630-180ff1b14dd0" name="Changes" comment="removed the ads from home banner. also fixed the font size increase">
-      <change afterPath="$PROJECT_DIR$/assets/images/shield.png" afterDir="false" />
+    <list default="true" id="b1d88a55-7d82-40b8-8630-180ff1b14dd0" name="Changes" comment="added new app icon . servers and recommeneded screens updated">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-hdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-hdpi/ic_launcher.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-mdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-mdpi/ic_launcher.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/Widgets/recommended_server_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/recommended_server_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/Widgets/servers_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/servers_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/View/Widgets/custom_banner_ad.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/custom_banner_ad.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/View/Widgets/floating_lines_animation.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/floating_lines_animation.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/View/Widgets/navbar.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/navbar.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/View/backup.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/backup.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/View/home_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/home_screen.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/View/more_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/more_screen.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
@@ -329,7 +325,15 @@
       <option name="project" value="LOCAL" />
       <updated>1769840943269</updated>
     </task>
-    <option name="localTasksCounter" value="29" />
+    <task id="LOCAL-00029" summary="added new app icon . servers and recommeneded screens updated">
+      <option name="closed" value="true" />
+      <created>1770189604789</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1770189604789</updated>
+    </task>
+    <option name="localTasksCounter" value="30" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -344,7 +348,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="new" />
     <MESSAGE value="new code" />
     <MESSAGE value="structured the ui of home" />
     <MESSAGE value="added the theme file in the app screens" />
@@ -369,6 +372,7 @@
     <MESSAGE value="ads are added and added custom support options on the morescreen" />
     <MESSAGE value="Firebase Analytics are added and ads" />
     <MESSAGE value="removed the ads from home banner. also fixed the font size increase" />
-    <option name="LAST_COMMIT_MESSAGE" value="removed the ads from home banner. also fixed the font size increase" />
+    <MESSAGE value="added new app icon . servers and recommeneded screens updated" />
+    <option name="LAST_COMMIT_MESSAGE" value="added new app icon . servers and recommeneded screens updated" />
   </component>
 </project>
