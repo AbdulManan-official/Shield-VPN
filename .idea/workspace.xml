@@ -5,13 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b1d88a55-7d82-40b8-8630-180ff1b14dd0" name="Changes" comment="added new app icon . servers and recommeneded screens updated">
+      <change afterPath="$PROJECT_DIR$/lib/providers/ads_controller.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/utils/analytics_service.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/utils/custom_toast.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/utils/logo_painter.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/utils/vpn_app_review.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/Widgets/custom_banner_ad.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/custom_banner_ad.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/Widgets/floating_lines_animation.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/floating_lines_animation.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/Widgets/navbar.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/Widgets/navbar.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/backup.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/backup.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/View/home_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/home_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/View/more_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/View/more_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -70,7 +72,7 @@
     &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settingsdialog.project.gradle&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;AndroidSdkUpdater&quot;,
     &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
   }
 }</component>

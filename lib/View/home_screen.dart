@@ -1160,18 +1160,18 @@ class _HomeScreenState extends State<HomeScreen>
                               Column(
                                 children: [
                                   // Existing Banner Ad
-                                  // Obx(() {
-                                  //   if (adsController.banner != null) {
-                                  //     return Container(
-                                  //       margin: const EdgeInsets.only(bottom: 12),
-                                  //       alignment: Alignment.center,
-                                  //       width: adsController.banner!.size.width.toDouble(),
-                                  //       height: adsController.banner!.size.height.toDouble(),
-                                  //       child: AdWidget(ad: adsController.banner!),
-                                  //     );
-                                  //   }
-                                  //   return const SizedBox.shrink();
-                                  // }),
+                                  Obx(() {
+                                    if (adsController.banner != null) {
+                                      return Container(
+                                        margin: const EdgeInsets.only(bottom: 12),
+                                        alignment: Alignment.center,
+                                        width: adsController.banner!.size.width.toDouble(),
+                                        height: adsController.banner!.size.height.toDouble(),
+                                        child: AdWidget(ad: adsController.banner!),
+                                      );
+                                    }
+                                    return const SizedBox.shrink();
+                                  }),
 
                                   // Premium Banner - Pass connected status
                                 ],
